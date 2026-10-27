@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Players ({{ players|length }}/{{ max_players }})</h1>
+{% include "admin/_nav.html" %}
+
+{% if players|length < max_players %}
+<form method="post" class="inline-form">
+  <input type="text" name="name" placeholder="Player name" maxlength="80" required>
+  <button type="submit">Add player</button>
+</form>
+{% endif %}
+
+<ul class="player-list">
+  {% for p in players %}
+    <li>
+      <span>{{ p.name }}</span>
+      <form method="post" action="{{ url_for('admin.delete_player', player_id=p.id) }}" class="inline-form">
+        <button type="submit">Remove</button>
+      </form>
+    </li>
+  {% else %}
+    <li>No players yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,40 @@
+CREATE TABLE IF NOT EXISTS tournaments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS players (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    UNIQUE(tournament_id, name)
+);
+
+CREATE TABLE IF NOT EXISTS courts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    sort_order INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS matches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    court_id INTEGER NOT NULL REFERENCES courts(id) ON DELETE CASCADE,
+    slot INTEGER NOT NULL,
+    team1_player1_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+    team1_player2_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+    team2_player1_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+    team2_player2_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+    team1_score INTEGER,
+    team2_score INTEGER,
+    UNIQUE(court_id, slot)
+);
+
+CREATE TABLE IF NOT EXISTS exceptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    player1_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+    player2_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE
+);
+

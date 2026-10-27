@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Player Rankings &ndash; {{ tournament.name }}</h1>
+<table>
+  <thead><tr><th>Rank</th><th>Player</th><th>Total Score</th><th>Matches Played</th></tr></thead>
+  <tbody>
+    {% for row in board %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ row.name }}</td>
+        <td>{{ row.total_score }}</td>
+        <td>{{ row.matches_played }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="4">No scores entered yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

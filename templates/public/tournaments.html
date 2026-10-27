@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Tournaments</h1>
+<ul class="player-list">
+  {% for t in tournaments %}
+    <li>
+      <span>{{ t.name }}</span>
+      <span class="tournament-actions">
+        <a href="{{ url_for('public.scoring', tournament_id=t.id) }}">Scoring</a>
+        <a href="{{ url_for('public.rankings', tournament_id=t.id) }}">Rankings</a>
+        <a href="{{ url_for('public.schedule', tournament_id=t.id) }}">Schedule</a>
+      </span>
+    </li>
+  {% else %}
+    <li>No tournaments yet. Ask the admin to create one.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

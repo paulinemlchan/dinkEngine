@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DinkEngine</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <nav class="nav">
+    <a href="{{ url_for('public.index') }}">All Tournaments</a>
+    {% if tournament %}
+      <a href="{{ url_for('public.scoring', tournament_id=tournament.id) }}">Scoring</a>
+      <a href="{{ url_for('public.rankings', tournament_id=tournament.id) }}">Rankings</a>
+      <a href="{{ url_for('public.schedule', tournament_id=tournament.id) }}">Schedule</a>
+    {% endif %}
+    {% if session.get('is_admin') %}
+      <a href="{{ url_for('admin.tournaments') }}">Admin</a>
+      <a href="{{ url_for('auth.logout') }}">Logout</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}">Admin login</a>
+    {% endif %}
+  </nav>
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="flash-{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

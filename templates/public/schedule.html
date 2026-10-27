@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Partner Schedule &ndash; {{ tournament.name }}</h1>
+{% if not table %}
+  <p>No schedule has been generated yet. Ask the admin to generate one from the Randomizer page.</p>
+{% else %}
+<table>
+  <thead>
+    <tr>
+      <th>Player</th>
+      {% for r in rounds %}<th>R{{ r }}</th>{% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in table %}
+      <tr>
+        <td>{{ row.name }}</td>
+        {% for cell in row.cells %}<td>{{ cell }}</td>{% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

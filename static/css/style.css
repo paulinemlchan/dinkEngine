@@ -1,0 +1,103 @@
+* { box-sizing: border-box; }
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  margin: 0;
+  background: #f7f7f9;
+  color: #222;
+}
+.nav {
+  background: #1f2a44;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  gap: 1.25rem;
+}
+.nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+.nav a:hover { text-decoration: underline; }
+main {
+  max-width: 960px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+h1 { margin-top: 0; }
+.admin-tabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.admin-tabs a {
+  padding: 0.4rem 0.9rem;
+  background: #e3e7f0;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #1f2a44;
+  font-weight: 600;
+}
+.flashes { list-style: none; padding: 0; }
+.flash-error { color: #b00020; font-weight: 600; }
+.flash-success { color: #1b7a1b; font-weight: 600; }
+.inline-form { display: inline-flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+.active-tournament { color: #1f2a44; margin-top: -0.5rem; }
+.tournament-actions { display: inline-flex; gap: 0.75rem; align-items: center; }
+.player-list { list-style: none; padding: 0; }
+.player-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 0.35rem;
+}
+fieldset {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+.team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.team input[type="number"] { width: 5rem; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+th { background: #e3e7f0; }
+
+/* CSS-only tabs: radios are hidden, labels act as tab buttons */
+.tabs input[type="radio"] { display: none; }
+.tabs label {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  margin-right: 0.25rem;
+  background: #e3e7f0;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  font-weight: 600;
+}
+.tabs input[type="radio"]:checked + label {
+  background: #1f2a44;
+  color: #fff;
+}
+.tab-panels {
+  border: 1px solid #ddd;
+  border-radius: 0 6px 6px 6px;
+  background: #fff;
+  padding: 1rem;
+}
+.tab-panel { display: none; }

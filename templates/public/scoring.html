@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Scoring &ndash; {{ tournament.name }}</h1>
+
+{% if not courts %}
+  <p>No courts configured yet. Ask the admin to set them up.</p>
+{% else %}
+<style>
+  {% for court in courts %}
+  #tab-{{ court.id }}:checked ~ .tab-panels #panel-{{ court.id }} { display: block; }
+  {% endfor %}
+</style>
+
+<div class="tabs">
+  {% for court in courts %}
+    <input type="radio" name="court-tab" id="tab-{{ court.id }}" {% if loop.first %}checked{% endif %}>
+    <label for="tab-{{ court.id }}">{{ court.name }}</label>
+  {% endfor %}
+
+  <div class="tab-panels">
+    {% for court in courts %}
+      <section id="panel-{{ court.id }}" class="tab-panel">
+        {% set rows = matches_by_court[court.id] %}
+        {% for m in rows %}
+          {% if m.team1_player1_name or m.team2_player1_name %}
+          <fieldset>
+            <legend>Match {{ m.slot }}</legend>
+            <form method="post" action="{{ url_for('public.submit_score', tournament_id=tournament.id, match_id=m.id) }}">
+              <div class="team">
+                <span>{{ m.team1_player1_name or '?' }} &amp; {{ m.team1_player2_name or '?' }}</span>
+                <input type="number" name="team1_score" min="0" value="{{ m.team1_score if m.team1_score is not none else '' }}">
+              </div>
+              <div class="team">
+                <span>{{ m.team2_player1_name or '?' }} &amp; {{ m.team2_player2_name or '?' }}</span>
+                <input type="number" name="team2_score" min="0" value="{{ m.team2_score if m.team2_score is not none else '' }}">
+              </div>
+              <button type="submit">Save score</button>
+            </form>
+          </fieldset>
+          {% endif %}
+        {% else %}
+          <p>No matches set up for this court yet.</p>
+        {% endfor %}
+      </section>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

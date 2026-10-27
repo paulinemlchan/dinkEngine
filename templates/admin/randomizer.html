@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Randomizer</h1>
+{% include "admin/_nav.html" %}
+
+<h2>Generate matches</h2>
+{% if not courts_count %}
+  <p>Add at least one court on the Courts tab before generating matches.</p>
+{% else %}
+<p>Each round fills up to {{ courts_count }} court(s) with 4 random players apiece, respecting the exceptions below.</p>
+<form method="post" class="inline-form"
+      onsubmit="return confirm('This replaces all matches and any scores already entered. Continue?');">
+  <input type="hidden" name="action" value="generate">
+  <label>Matches per player
+    <input type="number" name="rounds" min="1" max="{{ max_rounds }}" required>
+  </label>
+  <button type="submit">Generate</button>
+</form>
+{% endif %}
+<p>Generated matches fill the <a href="{{ url_for('public.scoring', tournament_id=tournament.id) }}">Scoring</a> page
+   directly, and can still be edited on the <a href="{{ url_for('admin.matches') }}">Matches</a> tab. A read-only
+   partner overview is on the public <a href="{{ url_for('public.schedule', tournament_id=tournament.id) }}">Schedule</a> page.</p>
+
+
+<h2>Exceptions ({{ exceptions|length }}/{{ max_exceptions }})</h2>
+<p>Pairs of players who should never be partnered together.</p>
+<ul>
+  {% for e in exceptions %}
+    <li>
+      {{ e.player1_name }} &ne; {{ e.player2_name }}
+      <form method="post" class="inline-form">
+        <input type="hidden" name="action" value="delete_exception">
+        <input type="hidden" name="exception_id" value="{{ e.id }}">
+        <button type="submit">Remove</button>
+      </form>
+    </li>
+  {% else %}
+    <li>No exceptions added.</li>
+  {% endfor %}
+</ul>
+
+{% if exceptions|length < max_exceptions %}
+<form method="post" class="inline-form">
+  <input type="hidden" name="action" value="add_exception">
+  <select name="player1" required>
+    <option value="">-- player --</option>
+    {% for p in players %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+  </select>
+  should not partner
+  <select name="player2" required>
+    <option value="">-- player --</option>
+    {% for p in players %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+  </select>
+  <button type="submit">Add exception</button>
+</form>
+{% endif %}
+{% endblock %}

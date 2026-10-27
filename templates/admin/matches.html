@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Matches</h1>
+{% include "admin/_nav.html" %}
+
+{% if not courts %}
+  <p>Add courts first on the Courts tab.</p>
+{% else %}
+<style>
+  {% for court in courts %}
+  #tab-{{ court.id }}:checked ~ .tab-panels #panel-{{ court.id }} { display: block; }
+  {% endfor %}
+</style>
+
+<div class="tabs">
+  {% for court in courts %}
+    <input type="radio" name="court-tab" id="tab-{{ court.id }}" {% if loop.first %}checked{% endif %}>
+    <label for="tab-{{ court.id }}">{{ court.name }}</label>
+  {% endfor %}
+
+  <div class="tab-panels">
+    {% for court in courts %}
+      <section id="panel-{{ court.id }}" class="tab-panel">
+        {% for slot in slots %}
+          {% set m = matches_by_court[court.id][slot - 1] %}
+          <fieldset>
+            <legend>Match {{ slot }}</legend>
+            <form method="post" action="{{ url_for('admin.save_match', court_id=court.id, slot=slot) }}">
+              <div class="team">
+                <strong>Team 1</strong>
+                <select name="team1_player1">
+                  <option value="">-- player --</option>
+                  {% for p in players %}
+                    <option value="{{ p.id }}" {% if m and m.team1_player1_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                  {% endfor %}
+                </select>
+                <select name="team1_player2">
+                  <option value="">-- player --</option>
+                  {% for p in players %}
+                    <option value="{{ p.id }}" {% if m and m.team1_player2_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="team">
+                <strong>Team 2</strong>
+                <select name="team2_player1">
+                  <option value="">-- player --</option>
+                  {% for p in players %}
+                    <option value="{{ p.id }}" {% if m and m.team2_player1_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                  {% endfor %}
+                </select>
+                <select name="team2_player2">
+                  <option value="">-- player --</option>
+                  {% for p in players %}
+                    <option value="{{ p.id }}" {% if m and m.team2_player2_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit">Save match</button>
+            </form>
+          </fieldset>
+        {% endfor %}
+      </section>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
