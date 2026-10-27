@@ -172,7 +172,8 @@ def report(tournament_id):
                 """SELECT courts.name AS court_name, matches.slot,
                           p1.name AS team1_player1_name, p2.name AS team1_player2_name,
                           p3.name AS team2_player1_name, p4.name AS team2_player2_name,
-                          matches.team1_player1_id, matches.team2_player1_id,
+                          matches.team1_player1_id, matches.team1_player2_id,
+                          matches.team2_player1_id, matches.team2_player2_id,
                           matches.team1_score, matches.team2_score
                    FROM matches
                    JOIN courts ON courts.id = matches.court_id
