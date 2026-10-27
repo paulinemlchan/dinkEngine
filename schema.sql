@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS players (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
+    is_kid INTEGER NOT NULL DEFAULT 0,
     UNIQUE(tournament_id, name)
 );
 

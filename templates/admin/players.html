@@ -7,6 +7,7 @@
 <form method="post" class="inline-form">
   <input type="hidden" name="action" value="add">
   <input type="text" name="name" placeholder="Player name" maxlength="80" required>
+  <label><input type="checkbox" name="is_kid"> Kid</label>
   <button type="submit">Add player</button>
 </form>
 
@@ -24,9 +25,14 @@
   {% for p in players %}
     <li>
       <span>{{ p.name }}</span>
-      <form method="post" action="{{ url_for('admin.delete_player', player_id=p.id) }}" class="inline-form">
-        <button type="submit">Remove</button>
-      </form>
+      <span class="player-actions">
+        <form method="post" action="{{ url_for('admin.update_player_kid', player_id=p.id) }}" class="inline-form">
+          <label><input type="checkbox" name="is_kid" onchange="this.form.requestSubmit()" {% if p.is_kid %}checked{% endif %}> Kid</label>
+        </form>
+        <form method="post" action="{{ url_for('admin.delete_player', player_id=p.id) }}" class="inline-form">
+          <button type="submit">Remove</button>
+        </form>
+      </span>
     </li>
   {% else %}
     <li>No players yet.</li>

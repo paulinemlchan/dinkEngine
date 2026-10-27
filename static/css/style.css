@@ -122,6 +122,8 @@ textarea {
   border-radius: 4px;
   margin-bottom: 0.35rem;
 }
+.player-actions { display: inline-flex; gap: 0.75rem; align-items: center; }
+.player-actions .inline-form { margin-bottom: 0; }
 .match-list { list-style: none; padding: 0; margin-bottom: 1.5rem; }
 .match-list li {
   padding: 0.5rem 0.75rem;

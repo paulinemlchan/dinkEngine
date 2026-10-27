@@ -1,3 +1,4 @@
+import itertools
 from functools import wraps
 
 from flask import Blueprint, current_app, flash, g, redirect, render_template, request, session, url_for
@@ -135,13 +136,17 @@ def players():
                     )
         else:
             name = request.form.get("name", "").strip()
+            is_kid = 1 if request.form.get("is_kid") else 0
             if not name:
                 flash("Player name cannot be empty.", "error")
             elif count >= max_players:
                 flash(f"Maximum of {max_players} players reached.", "error")
             else:
                 try:
-                    db.execute("INSERT INTO players (tournament_id, name) VALUES (?, ?)", (tournament_id, name))
+                    db.execute(
+                        "INSERT INTO players (tournament_id, name, is_kid) VALUES (?, ?, ?)",
+                        (tournament_id, name, is_kid),
+                    )
                     db.commit()
                 except Exception:
                     flash("That player name already exists in this tournament.", "error")
@@ -164,6 +169,20 @@ def players():
 def delete_player(player_id):
     db = get_db()
     db.execute("DELETE FROM players WHERE id = ? AND tournament_id = ?", (player_id, g.tournament["id"]))
+    db.commit()
+    return redirect(url_for("admin.players"))
+
+
+@bp.route("/players/<int:player_id>/kid", methods=["POST"])
+@login_required
+@tournament_required
+def update_player_kid(player_id):
+    db = get_db()
+    is_kid = 1 if request.form.get("is_kid") else 0
+    db.execute(
+        "UPDATE players SET is_kid = ? WHERE id = ? AND tournament_id = ?",
+        (is_kid, player_id, g.tournament["id"]),
+    )
     db.commit()
     return redirect(url_for("admin.players"))
 
@@ -394,6 +413,11 @@ def randomizer():
                     "SELECT player1_id, player2_id FROM exceptions WHERE tournament_id = ?", (tournament_id,)
                 ).fetchall()
                 exception_pairs = [(row["player1_id"], row["player2_id"]) for row in exception_rows]
+
+                # Kids can never partner another kid, on top of the manual exceptions above.
+                kid_ids = [p["id"] for p in all_players if p["is_kid"]]
+                exception_pairs.extend(itertools.combinations(kid_ids, 2))
+
                 player_ids = [p["id"] for p in all_players]
 
                 try:
