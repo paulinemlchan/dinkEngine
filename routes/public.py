@@ -89,18 +89,21 @@ def rankings(tournament_id):
 
     totals = {}
     played = {}
+    diffs = {}
 
-    def add(pid, pts):
+    def add(pid, pts, diff):
         if pid is None:
             return
         totals[pid] = totals.get(pid, 0) + pts
         played[pid] = played.get(pid, 0) + 1
+        diffs[pid] = diffs.get(pid, 0) + diff
 
     for m in matches:
-        add(m["team1_player1_id"], m["team1_score"])
-        add(m["team1_player2_id"], m["team1_score"])
-        add(m["team2_player1_id"], m["team2_score"])
-        add(m["team2_player2_id"], m["team2_score"])
+        margin = m["team1_score"] - m["team2_score"]
+        add(m["team1_player1_id"], m["team1_score"], margin)
+        add(m["team1_player2_id"], m["team1_score"], margin)
+        add(m["team2_player1_id"], m["team2_score"], -margin)
+        add(m["team2_player2_id"], m["team2_score"], -margin)
 
     all_players = db.execute(
         "SELECT * FROM players WHERE tournament_id = ? ORDER BY name", (tournament_id,)
@@ -110,10 +113,11 @@ def rankings(tournament_id):
             "name": p["name"],
             "total_score": totals.get(p["id"], 0),
             "matches_played": played.get(p["id"], 0),
+            "point_difference": diffs.get(p["id"], 0),
         }
         for p in all_players
     ]
-    board.sort(key=lambda row: (-row["total_score"], row["name"]))
+    board.sort(key=lambda row: (-row["total_score"], -row["point_difference"], row["name"]))
     return render_template("public/rankings.html", tournament=tournament, board=board)
 
 

@@ -2,17 +2,18 @@
 {% block content %}
 <h1>Player Rankings &ndash; {{ tournament.name }}</h1>
 <table>
-  <thead><tr><th>Rank</th><th>Player</th><th>Total Score</th><th>Matches Played</th></tr></thead>
+  <thead><tr><th>Rank</th><th>Player</th><th>Total Score</th><th>Point Difference</th><th>Matches Played</th></tr></thead>
   <tbody>
     {% for row in board %}
       <tr>
         <td>{{ loop.index }}</td>
         <td>{{ row.name }}</td>
         <td>{{ row.total_score }}</td>
+        <td>{{ "%+d"|format(row.point_difference) }}</td>
         <td>{{ row.matches_played }}</td>
       </tr>
     {% else %}
-      <tr><td colspan="4">No scores entered yet.</td></tr>
+      <tr><td colspan="5">No scores entered yet.</td></tr>
     {% endfor %}
   </tbody>
 </table>
