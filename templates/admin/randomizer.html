@@ -8,13 +8,14 @@
   <p>Add at least one court on the Courts tab before generating matches.</p>
 {% else %}
 <p>Every player gets exactly the number of matches entered below — nobody plays twice in the same
-   round, and nobody is ever on two courts at once. If that's not possible with the current number
-   of players/courts within {{ max_rounds }} rounds per court, you'll get an error explaining why.</p>
+   round, and nobody is ever on two courts at once. The schedule automatically uses as many rounds
+   as needed to fit everyone in (shown on the Matches tab); if your numbers make that impossible
+   (e.g. players &times; matches isn't divisible by 4), you'll get an error explaining why.</p>
 <form method="post" class="inline-form"
       onsubmit="return confirm('This replaces all matches and any scores already entered. Continue?');">
   <input type="hidden" name="action" value="generate">
   <label>Matches per player
-    <input type="number" name="rounds" min="1" max="{{ max_rounds }}" required>
+    <input type="number" name="rounds" min="1" required>
   </label>
   <button type="submit">Generate</button>
 </form>

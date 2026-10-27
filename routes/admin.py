@@ -225,7 +225,14 @@ def matches():
     all_players = db.execute(
         "SELECT * FROM players WHERE tournament_id = ? ORDER BY name", (tournament_id,)
     ).fetchall()
-    max_slots = current_app.config["MAX_MATCHES_PER_COURT"]
+    # Grid grows past the default if the randomizer already generated more rounds than that.
+    highest_slot = db.execute(
+        """SELECT MAX(matches.slot) AS m FROM matches
+           JOIN courts ON courts.id = matches.court_id
+           WHERE courts.tournament_id = ?""",
+        (tournament_id,),
+    ).fetchone()["m"]
+    max_slots = max(current_app.config["MAX_MATCHES_PER_COURT"], highest_slot or 0)
 
     matches_by_court = {}
     for court in all_courts:
@@ -368,7 +375,6 @@ def randomizer():
             return redirect(url_for("admin.randomizer"))
 
         if action == "generate":
-            max_slots = current_app.config["MAX_MATCHES_PER_COURT"]
             all_courts = db.execute(
                 "SELECT * FROM courts WHERE tournament_id = ? ORDER BY sort_order", (tournament_id,)
             ).fetchall()
@@ -392,7 +398,7 @@ def randomizer():
 
                 try:
                     schedule = generate_match_schedule(
-                        player_ids, len(all_courts), matches_per_player, exception_pairs, max_rounds=max_slots
+                        player_ids, len(all_courts), matches_per_player, exception_pairs
                     )
                 except ValueError as exc:
                     flash(str(exc), "error")
@@ -436,7 +442,6 @@ def randomizer():
         players=all_players,
         exceptions=exceptions,
         max_exceptions=max_exceptions,
-        max_rounds=current_app.config["MAX_MATCHES_PER_COURT"],
         courts_count=courts_count,
         tournament=g.tournament,
     )
