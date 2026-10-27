@@ -83,7 +83,21 @@ def _build_round(player_ids, round_capacity, remaining, history, exceptions, max
             raise ValueError("Could not build a round that satisfies the exceptions.")
 
     random.shuffle(pairs)
-    return [(pairs[i], pairs[i + 1]) for i in range(0, len(pairs), 2)]
+    foursomes = [(pairs[i], pairs[i + 1]) for i in range(0, len(pairs), 2)]
+    _assert_no_shared_player(foursomes)
+    return foursomes
+
+
+def _assert_no_shared_player(foursomes):
+    # Safety net: a player must never face themselves, i.e. appear on both
+    # teams of the same match (e.g. A&B vs A&C). This should be impossible
+    # since pairs are built as a disjoint partition of the round's players,
+    # but we guard against it so a future change can't silently break it.
+    for team1, team2 in foursomes:
+        if set(team1) & set(team2):
+            raise ValueError(
+                f"Invalid match generated: {team1} vs {team2} share a player."
+            )
 
 
 def _pair_players(pool, history, exceptions, allow_repeat):
