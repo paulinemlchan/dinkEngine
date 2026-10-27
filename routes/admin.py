@@ -76,6 +76,16 @@ def tournaments():
                 session.pop("tournament_id", None)
             flash("Tournament deleted.", "success")
 
+        elif action == "rename":
+            tournament_id = request.form.get("tournament_id")
+            name = request.form.get("name", "").strip()
+            if not name:
+                flash("Tournament name cannot be empty.", "error")
+            else:
+                db.execute("UPDATE tournaments SET name = ? WHERE id = ?", (name, tournament_id))
+                db.commit()
+                flash("Tournament renamed.", "success")
+
         return redirect(url_for("admin.tournaments"))
 
     all_tournaments = db.execute("SELECT * FROM tournaments ORDER BY created_at DESC").fetchall()

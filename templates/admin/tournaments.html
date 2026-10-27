@@ -14,7 +14,13 @@
 <ul class="player-list">
   {% for t in tournaments %}
     <li>
-      <span>{{ t.name }}{% if t.id == active_tournament_id %} <strong>(active)</strong>{% endif %}</span>
+      <form method="post" action="{{ url_for('admin.tournaments') }}" class="inline-form">
+        <input type="hidden" name="action" value="rename">
+        <input type="hidden" name="tournament_id" value="{{ t.id }}">
+        <input type="text" name="name" value="{{ t.name }}" maxlength="120" required>
+        <button type="submit">Rename</button>
+      </form>
+      {% if t.id == active_tournament_id %}<strong>(active)</strong>{% endif %}
       <span class="tournament-actions">
         {% if t.id != active_tournament_id %}
         <form method="post" class="inline-form">
