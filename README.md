@@ -9,6 +9,8 @@ tournament keeps its own players, courts, matches and schedule.
 ## Setup
 
 ```powershell
+git clone https://github.com/paulinemlchan/dinkEngine.git
+cd dinkEngine
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
