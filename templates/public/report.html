@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>My Matches &ndash; {{ tournament.name }}</h1>
+
+<form method="get" class="inline-form">
+  <select name="player_id" required>
+    <option value="">-- select your name --</option>
+    {% for p in players %}
+      <option value="{{ p.id }}" {% if selected_player and selected_player.id == p.id %}selected{% endif %}>{{ p.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Show my matches</button>
+</form>
+
+{% if selected_player %}
+  <h2>{{ selected_player.name }}'s matches</h2>
+  {% if not matches %}
+    <p>No matches assigned yet.</p>
+  {% else %}
+    <table>
+      <thead><tr><th>Court</th><th>Match</th><th>Partner</th><th>Opponents</th><th>Score</th></tr></thead>
+      <tbody>
+        {% for m in matches %}
+          <tr>
+            <td>{{ m.court_name }}</td>
+            <td>{{ m.slot }}</td>
+            <td>{{ m.partner }}</td>
+            <td>{{ m.opponents|join(' & ') }}</td>
+            <td>{{ m.score or '' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endif %}
+{% endblock %}

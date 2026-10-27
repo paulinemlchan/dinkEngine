@@ -10,7 +10,16 @@
   <button type="submit">Save</button>
 </form>
 
-<ul>
-  {% for c in courts %}<li>{{ c.name }}</li>{% else %}<li>No courts configured yet.</li>{% endfor %}
+<ul class="player-list">
+  {% for c in courts %}
+    <li>
+      <form method="post" action="{{ url_for('admin.rename_court', court_id=c.id) }}" class="inline-form">
+        <input type="text" name="name" value="{{ c.name }}" maxlength="80" required>
+        <button type="submit">Rename</button>
+      </form>
+    </li>
+  {% else %}
+    <li>No courts configured yet.</li>
+  {% endfor %}
 </ul>
 {% endblock %}

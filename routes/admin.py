@@ -230,6 +230,23 @@ def courts():
     )
 
 
+@bp.route("/courts/<int:court_id>/rename", methods=["POST"])
+@login_required
+@tournament_required
+def rename_court(court_id):
+    db = get_db()
+    name = request.form.get("name", "").strip()
+    if not name:
+        flash("Court name cannot be empty.", "error")
+    else:
+        db.execute(
+            "UPDATE courts SET name = ? WHERE id = ? AND tournament_id = ?",
+            (name, court_id, g.tournament["id"]),
+        )
+        db.commit()
+    return redirect(url_for("admin.courts"))
+
+
 # ---------- Matches ----------
 
 @bp.route("/matches")

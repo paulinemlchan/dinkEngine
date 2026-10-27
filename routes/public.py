@@ -149,3 +149,67 @@ def schedule(tournament_id):
         court["matches"].append(row)
 
     return render_template("public/schedule.html", tournament=tournament, courts=courts_by_id.values())
+
+
+@bp.route("/t/<int:tournament_id>/report")
+def report(tournament_id):
+    """Lets any visitor pick their name and see their own matches and court."""
+    db = get_db()
+    tournament = _get_tournament(db, tournament_id)
+    all_players = db.execute(
+        "SELECT * FROM players WHERE tournament_id = ? ORDER BY name", (tournament_id,)
+    ).fetchall()
+
+    selected_player = None
+    matches = []
+    player_id = request.args.get("player_id", type=int)
+    if player_id is not None:
+        selected_player = db.execute(
+            "SELECT * FROM players WHERE id = ? AND tournament_id = ?", (player_id, tournament_id)
+        ).fetchone()
+        if selected_player is not None:
+            rows = db.execute(
+                """SELECT courts.name AS court_name, matches.slot,
+                          p1.name AS team1_player1_name, p2.name AS team1_player2_name,
+                          p3.name AS team2_player1_name, p4.name AS team2_player2_name,
+                          matches.team1_player1_id, matches.team2_player1_id,
+                          matches.team1_score, matches.team2_score
+                   FROM matches
+                   JOIN courts ON courts.id = matches.court_id
+                   LEFT JOIN players p1 ON p1.id = matches.team1_player1_id
+                   LEFT JOIN players p2 ON p2.id = matches.team1_player2_id
+                   LEFT JOIN players p3 ON p3.id = matches.team2_player1_id
+                   LEFT JOIN players p4 ON p4.id = matches.team2_player2_id
+                   WHERE courts.tournament_id = ?
+                     AND ? IN (matches.team1_player1_id, matches.team1_player2_id,
+                               matches.team2_player1_id, matches.team2_player2_id)
+                   ORDER BY matches.slot""",
+                (tournament_id, player_id),
+            ).fetchall()
+            for row in rows:
+                on_team1 = row["team1_player1_id"] == player_id or row["team1_player2_id"] == player_id
+                if on_team1:
+                    partner = row["team1_player2_name"] if row["team1_player1_id"] == player_id else row["team1_player1_name"]
+                    opponents = [row["team2_player1_name"], row["team2_player2_name"]]
+                    my_score, opp_score = row["team1_score"], row["team2_score"]
+                else:
+                    partner = row["team2_player2_name"] if row["team2_player1_id"] == player_id else row["team2_player1_name"]
+                    opponents = [row["team1_player1_name"], row["team1_player2_name"]]
+                    my_score, opp_score = row["team2_score"], row["team1_score"]
+                matches.append(
+                    {
+                        "court_name": row["court_name"],
+                        "slot": row["slot"],
+                        "partner": partner or "?",
+                        "opponents": [o or "?" for o in opponents],
+                        "score": f"{my_score}-{opp_score}" if my_score is not None else None,
+                    }
+                )
+
+    return render_template(
+        "public/report.html",
+        tournament=tournament,
+        players=all_players,
+        selected_player=selected_player,
+        matches=matches,
+    )
