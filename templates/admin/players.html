@@ -5,9 +5,19 @@
 
 {% if players|length < max_players %}
 <form method="post" class="inline-form">
+  <input type="hidden" name="action" value="add">
   <input type="text" name="name" placeholder="Player name" maxlength="80" required>
   <button type="submit">Add player</button>
 </form>
+
+<details class="bulk-add">
+  <summary>Add multiple players at once</summary>
+  <form method="post">
+    <input type="hidden" name="action" value="add_bulk">
+    <textarea name="names" rows="6" placeholder="One player name per line (or separate with commas)"></textarea>
+    <button type="submit">Add all</button>
+  </form>
+</details>
 {% endif %}
 
 <ul class="player-list">

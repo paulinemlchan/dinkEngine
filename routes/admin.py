@@ -93,21 +93,58 @@ def tournaments():
 def players():
     db = get_db()
     tournament_id = g.tournament["id"]
+    max_players = current_app.config["MAX_PLAYERS"]
+
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
+        action = request.form.get("action", "add")
         count = db.execute(
             "SELECT COUNT(*) AS c FROM players WHERE tournament_id = ?", (tournament_id,)
         ).fetchone()["c"]
-        if not name:
-            flash("Player name cannot be empty.", "error")
-        elif count >= current_app.config["MAX_PLAYERS"]:
-            flash(f"Maximum of {current_app.config['MAX_PLAYERS']} players reached.", "error")
+
+        if action == "add_bulk":
+            raw = request.form.get("names", "")
+            candidates = []
+            seen = set()
+            for line in raw.replace(",", "\n").splitlines():
+                name = line.strip()
+                if name and name not in seen:
+                    seen.add(name)
+                    candidates.append(name)
+
+            if not candidates:
+                flash("Enter at least one player name.", "error")
+            else:
+                added = 0
+                skipped = []
+                for name in candidates:
+                    if count + added >= max_players:
+                        skipped.append(name)
+                        continue
+                    try:
+                        db.execute("INSERT INTO players (tournament_id, name) VALUES (?, ?)", (tournament_id, name))
+                        db.commit()
+                        added += 1
+                    except Exception:
+                        skipped.append(name)
+                if added:
+                    flash(f"Added {added} player(s).", "success")
+                if skipped:
+                    flash(
+                        f"Skipped (duplicate name or over the {max_players}-player limit): {', '.join(skipped)}",
+                        "error",
+                    )
         else:
-            try:
-                db.execute("INSERT INTO players (tournament_id, name) VALUES (?, ?)", (tournament_id, name))
-                db.commit()
-            except Exception:
-                flash("That player name already exists in this tournament.", "error")
+            name = request.form.get("name", "").strip()
+            if not name:
+                flash("Player name cannot be empty.", "error")
+            elif count >= max_players:
+                flash(f"Maximum of {max_players} players reached.", "error")
+            else:
+                try:
+                    db.execute("INSERT INTO players (tournament_id, name) VALUES (?, ?)", (tournament_id, name))
+                    db.commit()
+                except Exception:
+                    flash("That player name already exists in this tournament.", "error")
         return redirect(url_for("admin.players"))
 
     all_players = db.execute(
@@ -116,7 +153,7 @@ def players():
     return render_template(
         "admin/players.html",
         players=all_players,
-        max_players=current_app.config["MAX_PLAYERS"],
+        max_players=max_players,
         tournament=g.tournament,
     )
 
@@ -242,6 +279,31 @@ def save_match(court_id, slot):
             flash("One or more players do not belong to the active tournament.", "error")
             return redirect(url_for("admin.matches"))
 
+        # Prevent the same player being on two courts in the same slot (round).
+        other_matches = db.execute(
+            """SELECT matches.team1_player1_id, matches.team1_player2_id,
+                      matches.team2_player1_id, matches.team2_player2_id
+               FROM matches
+               JOIN courts ON courts.id = matches.court_id
+               WHERE courts.tournament_id = ? AND matches.slot = ? AND matches.court_id != ?""",
+            (tournament_id, slot, court_id),
+        ).fetchall()
+        busy_players = set()
+        for row in other_matches:
+            busy_players.update(
+                p for p in (row["team1_player1_id"], row["team1_player2_id"],
+                            row["team2_player1_id"], row["team2_player2_id"]) if p is not None
+            )
+        conflicts = busy_players & set(chosen)
+        if conflicts:
+            names = db.execute(
+                f"SELECT name FROM players WHERE id IN ({','.join('?' for _ in conflicts)})",
+                tuple(conflicts),
+            ).fetchall()
+            names = ", ".join(row["name"] for row in names)
+            flash(f"Match {slot} already has {names} playing on another court.", "error")
+            return redirect(url_for("admin.matches"))
+
     existing = db.execute("SELECT id FROM matches WHERE court_id = ? AND slot = ?", (court_id, slot)).fetchone()
     if existing:
         db.execute(
@@ -311,12 +373,12 @@ def randomizer():
                 "SELECT * FROM courts WHERE tournament_id = ? ORDER BY sort_order", (tournament_id,)
             ).fetchall()
             try:
-                rounds = int(request.form.get("rounds", "0"))
+                matches_per_player = int(request.form.get("rounds", "0"))
             except ValueError:
-                rounds = 0
+                matches_per_player = 0
 
-            if rounds < 1 or rounds > max_slots:
-                flash(f"Enter a number of matches per player between 1 and {max_slots}.", "error")
+            if matches_per_player < 1:
+                flash("Enter a number of matches per player of at least 1.", "error")
             elif not all_courts:
                 flash("Add at least one court first.", "error")
             elif len(all_players) < 4:
@@ -328,7 +390,14 @@ def randomizer():
                 exception_pairs = [(row["player1_id"], row["player2_id"]) for row in exception_rows]
                 player_ids = [p["id"] for p in all_players]
 
-                schedule = generate_match_schedule(player_ids, len(all_courts), rounds, exception_pairs)
+                try:
+                    schedule = generate_match_schedule(
+                        player_ids, len(all_courts), matches_per_player, exception_pairs, max_rounds=max_slots
+                    )
+                except ValueError as exc:
+                    flash(str(exc), "error")
+                    return redirect(url_for("admin.randomizer"))
+
                 court_ids = [c["id"] for c in all_courts]
 
                 db.execute(
@@ -343,7 +412,11 @@ def randomizer():
                             (court_id, round_no, team1[0], team1[1], team2[0], team2[1]),
                         )
                 db.commit()
-                flash("Matches generated and filled into the Scoring tab.", "success")
+                flash(
+                    f"Matches generated ({len(schedule)} round(s)) — every player got exactly "
+                    f"{matches_per_player} matches, filled into the Scoring tab.",
+                    "success",
+                )
             return redirect(url_for("admin.randomizer"))
 
     exceptions = db.execute(

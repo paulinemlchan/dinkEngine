@@ -1,24 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Partner Schedule &ndash; {{ tournament.name }}</h1>
-{% if not table %}
-  <p>No schedule has been generated yet. Ask the admin to generate one from the Randomizer page.</p>
+{% if not courts %}
+  <p>No matches have been set up yet. Ask the admin to assign matches or run the Randomizer.</p>
 {% else %}
-<table>
-  <thead>
-    <tr>
-      <th>Player</th>
-      {% for r in rounds %}<th>R{{ r }}</th>{% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in table %}
-      <tr>
-        <td>{{ row.name }}</td>
-        {% for cell in row.cells %}<td>{{ cell }}</td>{% endfor %}
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  {% for court in courts %}
+    <h2>{{ court.name }}</h2>
+    <ul class="match-list">
+      {% for m in court.matches %}
+        {% if m.team1_player1_name or m.team2_player1_name %}
+        <li>
+          <span class="match-slot">Match {{ m.slot }}:</span>
+          {{ m.team1_player1_name or '?' }} &amp; {{ m.team1_player2_name or '?' }}
+          vs
+          {{ m.team2_player1_name or '?' }} &amp; {{ m.team2_player2_name or '?' }}
+        </li>
+        {% endif %}
+      {% else %}
+        <li>No matches set up for this court yet.</li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
 {% endif %}
 {% endblock %}
