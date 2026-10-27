@@ -22,7 +22,19 @@ def init_db():
     db = get_db()
     with current_app.open_resource("schema.sql") as f:
         db.executescript(f.read().decode("utf8"))
+    _migrate(db)
     db.commit()
+
+
+def _migrate(db):
+    """Add columns introduced after a database already existed.
+
+    schema.sql's CREATE TABLE IF NOT EXISTS only applies to brand new
+    databases, so older ones need their missing columns added here.
+    """
+    existing_columns = {row["name"] for row in db.execute("PRAGMA table_info(players)")}
+    if "is_kid" not in existing_columns:
+        db.execute("ALTER TABLE players ADD COLUMN is_kid INTEGER NOT NULL DEFAULT 0")
 
 
 @click.command("init-db")
