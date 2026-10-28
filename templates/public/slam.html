@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% macro player_row(round_number, slot, match, which) %}
+  {% set name = (match.player1_name if which == 1 else match.player2_name) if match else None %}
+  {% if not name %}
+    <div class="slam-player slam-player-tbd">TBD</div>
+  {% elif match.winner_name %}
+    <div class="slam-player {{ 'slam-player-winner' if match.winner_name == name else 'slam-player-loser' }}">{{ name }}</div>
+  {% else %}
+    <form method="post" action="{{ url_for('public.slam_pick', tournament_id=tournament.id) }}" class="slam-pick-form">
+      <input type="hidden" name="round" value="{{ round_number }}">
+      <input type="hidden" name="slot" value="{{ slot }}">
+      <button type="submit" name="winner" value="{{ name }}" class="slam-player-button">{{ name }}</button>
+    </form>
+  {% endif %}
+{% endmacro %}
+{% block content %}
+<div class="slam-banner">
+  <h1>1-Point Slam</h1>
+  <p>{{ tournament.name }} &middot; 32 players &middot; winner takes all</p>
+</div>
+
+<form method="post" action="{{ url_for('public.slam_start', tournament_id=tournament.id) }}" class="inline-form">
+  <button type="submit">{{ 'Restart Bracket' if started else 'Start' }}</button>
+</form>
+
+{% if started %}
+<div class="slam-bracket">
+  {% for round in rounds %}
+  <div class="slam-round slam-round-{{ round.number }}">
+    <h3>{{ round.label }}</h3>
+    {% for match in round.slots %}
+      <div class="slam-match">
+        {{ player_row(round.number, loop.index0, match, 1) }}
+        {{ player_row(round.number, loop.index0, match, 2) }}
+      </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <div class="slam-round slam-champion-col">
+    <h3>Champion</h3>
+    <div class="slam-champion-box">{{ champion or 'TBD' }}</div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

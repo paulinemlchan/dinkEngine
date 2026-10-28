@@ -39,3 +39,16 @@ CREATE TABLE IF NOT EXISTS exceptions (
     player2_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE
 );
 
+-- 1-Point Slam: a 32-player single-elimination bracket, random seeding, winner takes all.
+-- round: 1=Round 1 (16 matchups), 2=Round 2 (8), 3=Round 3 (4), 4=Semifinals (2), 5=Final (1).
+CREATE TABLE IF NOT EXISTS slam_matches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    round INTEGER NOT NULL,
+    slot INTEGER NOT NULL,
+    player1_name TEXT,
+    player2_name TEXT,
+    winner_name TEXT,
+    UNIQUE(tournament_id, round, slot)
+);
+

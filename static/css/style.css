@@ -186,3 +186,74 @@ th { background: var(--color-blue); color: #fff; }
   padding: 1rem;
 }
 .tab-panel { display: none; }
+
+.slam-banner {
+  background: var(--color-blue-dark);
+  color: #fff;
+  border-radius: 6px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.slam-banner h1 { color: #fff; margin: 0; }
+.slam-banner p { margin: 0.25rem 0 0; color: var(--color-yellow); font-weight: 600; letter-spacing: 0.04em; }
+.slam-bracket {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+.slam-round {
+  flex: 1 0 170px;
+  min-width: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+.slam-round h3 { text-align: center; color: var(--color-blue-dark); margin-top: 0; }
+.slam-round-1 { background: #dceefb; }
+.slam-round-2 { background: #ddf3e4; }
+.slam-round-3 { background: #fbf3d2; }
+.slam-round-4 { background: #fbdfe3; }
+.slam-round-5 { background: #e6dcf5; }
+.slam-champion-col { background: none; justify-content: flex-start; }
+.slam-match {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin: 0.4rem 0;
+  padding: 0.25rem;
+}
+.slam-player, .slam-pick-form { margin: 0; }
+.slam-player {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+.slam-match .slam-player:last-child, .slam-match .slam-pick-form:last-child .slam-player-button { border-bottom: none; }
+.slam-player-tbd { color: #999; font-style: italic; }
+.slam-player-winner { font-weight: 700; color: #1b7a1b; }
+.slam-player-loser { color: #999; text-decoration: line-through; }
+.slam-player-button {
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 0;
+  font-weight: 600;
+  color: var(--color-navy-text);
+  padding: 0.3rem 0.5rem;
+}
+.slam-player-button:hover { background: var(--color-yellow); }
+.slam-champion-box {
+  background: var(--color-yellow);
+  border: 2px solid var(--color-yellow-dark);
+  border-radius: 6px;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+

@@ -1,8 +1,13 @@
-from flask import Blueprint, abort, redirect, render_template, request, url_for
+import random
+
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
 from db import get_db
 
 bp = Blueprint("public", __name__)
+
+SLAM_ROUND_SLOTS = {1: 16, 2: 8, 3: 4, 4: 2, 5: 1}
+SLAM_ROUND_LABELS = {1: "Round 1", 2: "Round 2", 3: "Round 3", 4: "Semifinals", 5: "Final"}
 
 
 def _get_tournament(db, tournament_id):
@@ -214,3 +219,106 @@ def report(tournament_id):
         selected_player=selected_player,
         matches=matches,
     )
+
+
+@bp.route("/t/<int:tournament_id>/slam")
+def slam(tournament_id):
+    db = get_db()
+    tournament = _get_tournament(db, tournament_id)
+    rows = db.execute(
+        "SELECT * FROM slam_matches WHERE tournament_id = ? ORDER BY round, slot", (tournament_id,)
+    ).fetchall()
+
+    by_round = {}
+    for row in rows:
+        by_round.setdefault(row["round"], {})[row["slot"]] = row
+
+    rounds = []
+    for round_num, slot_count in SLAM_ROUND_SLOTS.items():
+        slots = [by_round.get(round_num, {}).get(slot) for slot in range(slot_count)]
+        rounds.append({"number": round_num, "label": SLAM_ROUND_LABELS[round_num], "slots": slots})
+
+    champion = None
+    final_match = by_round.get(5, {}).get(0)
+    if final_match is not None:
+        champion = final_match["winner_name"]
+
+    return render_template(
+        "public/slam.html",
+        tournament=tournament,
+        rounds=rounds,
+        started=1 in by_round,
+        champion=champion,
+    )
+
+
+@bp.route("/t/<int:tournament_id>/slam/start", methods=["POST"])
+def slam_start(tournament_id):
+    db = get_db()
+    _get_tournament(db, tournament_id)
+
+    names = [row["name"] for row in db.execute(
+        "SELECT name FROM players WHERE tournament_id = ?", (tournament_id,)
+    ).fetchall()]
+
+    if not names:
+        flash("Add players to this tournament before starting a 1-Point Slam.", "error")
+        return redirect(url_for("public.slam", tournament_id=tournament_id))
+    if len(names) > 32:
+        flash("A 1-Point Slam bracket supports at most 32 players.", "error")
+        return redirect(url_for("public.slam", tournament_id=tournament_id))
+
+    random.shuffle(names)
+    names += ["BYE"] * (32 - len(names))
+
+    db.execute("DELETE FROM slam_matches WHERE tournament_id = ?", (tournament_id,))
+    for slot in range(16):
+        db.execute(
+            """INSERT INTO slam_matches (tournament_id, round, slot, player1_name, player2_name)
+               VALUES (?, 1, ?, ?, ?)""",
+            (tournament_id, slot, names[slot * 2], names[slot * 2 + 1]),
+        )
+    db.commit()
+    return redirect(url_for("public.slam", tournament_id=tournament_id))
+
+
+@bp.route("/t/<int:tournament_id>/slam/pick", methods=["POST"])
+def slam_pick(tournament_id):
+    db = get_db()
+    _get_tournament(db, tournament_id)
+
+    round_num = request.form.get("round", type=int)
+    slot = request.form.get("slot", type=int)
+    winner = request.form.get("winner", "").strip()
+
+    if round_num not in SLAM_ROUND_SLOTS or slot is None or not (0 <= slot < SLAM_ROUND_SLOTS[round_num]):
+        abort(400)
+
+    match = db.execute(
+        "SELECT * FROM slam_matches WHERE tournament_id = ? AND round = ? AND slot = ?",
+        (tournament_id, round_num, slot),
+    ).fetchone()
+    if match is None or winner not in (match["player1_name"], match["player2_name"]):
+        abort(400)
+
+    db.execute("UPDATE slam_matches SET winner_name = ? WHERE id = ?", (winner, match["id"]))
+
+    if round_num < 5:
+        next_slot = slot // 2
+        db.execute(
+            """INSERT INTO slam_matches (tournament_id, round, slot, player1_name, player2_name)
+               VALUES (?, ?, ?, ?, ?)
+               ON CONFLICT(tournament_id, round, slot) DO UPDATE SET
+                 player1_name = COALESCE(slam_matches.player1_name, excluded.player1_name),
+                 player2_name = COALESCE(slam_matches.player2_name, excluded.player2_name)""",
+            (
+                tournament_id,
+                round_num + 1,
+                next_slot,
+                winner if slot % 2 == 0 else None,
+                winner if slot % 2 == 1 else None,
+            ),
+        )
+
+    db.commit()
+    return redirect(url_for("public.slam", tournament_id=tournament_id))
