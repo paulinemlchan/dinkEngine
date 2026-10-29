@@ -12,7 +12,7 @@
       <img class="site-theme-logo" src="{{ url_for('static', filename='uploads/theme_logos/' ~ tournament.logo_filename) }}" alt="">
     {% endif %}
     <div class="site-header-inner">
-      <span class="site-title">DinkEngine</span>
+      <span class="site-title">{{ tournament.name if tournament else 'DinkEngine' }}</span>
       <span class="site-tagline">Pickleball Scheduling &amp; Scoring</span>
     </div>
   </header>

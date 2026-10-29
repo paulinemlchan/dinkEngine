@@ -17,15 +17,20 @@ body {
   background: var(--color-blue);
   background-image: radial-gradient(circle, rgba(215, 222, 46, 0.55) 7px, transparent 8px);
   background-size: 54px 54px;
-  padding: 1.75rem 1.5rem 1.25rem;
+  padding: 1.75rem 1.5rem;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 .site-theme-logo {
-  display: block;
-  margin: 0 auto 0.5rem;
-  height: 120px;
-  width: 120px;
-  max-height: 100%;
+  position: absolute;
+  right: 1rem;
+  top: 0;
+  bottom: 0;
+  height: 100%;
+  width: auto;
   border-radius: 50%;
   object-fit: contain;
 }
@@ -284,25 +289,27 @@ body.theme-halloween {
   --color-yellow-dark: #b8300c;
   --color-navy-text: #1c0f1f;
 }
-body.theme-halloween .site-header { background-image: radial-gradient(circle, rgba(106, 13, 173, 0.45) 7px, transparent 8px); }
+body.theme-halloween .site-header { background-image: radial-gradient(circle, rgba(232, 113, 26, 0.5) 7px, transparent 8px); }
 
 body.theme-christmas {
-  /* red + pine green + gold, with silver/white accents; button = gold */
+  /* red background with green dots; gold button */
   --color-blue: #7a1620;
   --color-blue-dark: #0b3d2c;
   --color-yellow: #d4af37;
   --color-yellow-dark: #a8862a;
   --color-navy-text: #0b2e22;
 }
-body.theme-christmas .site-header { background-image: radial-gradient(circle, rgba(255, 255, 255, 0.55) 7px, transparent 8px); }
+body.theme-christmas .site-header { background-image: radial-gradient(circle, rgba(34, 120, 58, 0.6) 7px, transparent 8px); }
 
 body.theme-chinese_new_year {
-  /* red + gold/orange; button = red */
-  --color-blue: #8a4a12;
-  --color-blue-dark: #5c0f12;
+  /* red background with white dots; red button with white text */
+  --color-blue: #9e1420;
+  --color-blue-dark: #6e0d16;
   --color-yellow: #c8102e;
   --color-yellow-dark: #8f0c20;
   --color-navy-text: #3a1208;
 }
-body.theme-chinese_new_year .site-header { background-image: radial-gradient(circle, rgba(212, 175, 55, 0.55) 7px, transparent 8px); }
+body.theme-chinese_new_year .site-header { background-image: radial-gradient(circle, rgba(255, 255, 255, 0.55) 7px, transparent 8px); }
+body.theme-chinese_new_year button,
+body.theme-chinese_new_year input[type="submit"] { color: #fff; }
 
