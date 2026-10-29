@@ -15,8 +15,9 @@ body {
 .site-header {
   position: relative;
   background: var(--color-blue);
-  background-image: radial-gradient(circle, rgba(215, 222, 46, 0.55) 7px, transparent 8px);
-  background-size: 54px 54px;
+  /* Tiled pickleball silhouette: ball color %23d7de2e (lime), holes punched in the header's own background color. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%23d7de2e'/%3E%3Cellipse cx='20' cy='6' rx='4' ry='2' fill='%231f74a0'/%3E%3Cellipse cx='20' cy='34' rx='4' ry='2' fill='%231f74a0'/%3E%3Cellipse cx='6' cy='20' rx='2' ry='4' fill='%231f74a0'/%3E%3Cellipse cx='34' cy='20' rx='2' ry='4' fill='%231f74a0'/%3E%3Cellipse cx='10' cy='10' rx='3' ry='1.6' fill='%231f74a0' transform='rotate(45 10 10)'/%3E%3Cellipse cx='30' cy='10' rx='3' ry='1.6' fill='%231f74a0' transform='rotate(-45 30 10)'/%3E%3Cellipse cx='10' cy='30' rx='3' ry='1.6' fill='%231f74a0' transform='rotate(-45 10 30)'/%3E%3Cellipse cx='30' cy='30' rx='3' ry='1.6' fill='%231f74a0' transform='rotate(45 30 30)'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%231f74a0'/%3E%3Ccircle cx='13' cy='24' r='2' fill='%231f74a0'/%3E%3Ccircle cx='27' cy='16' r='2' fill='%231f74a0'/%3E%3C/svg%3E");
+  background-size: 56px 56px;
   padding: 1.75rem 1.5rem;
   min-height: 140px;
   display: flex;
@@ -282,14 +283,16 @@ th { background: var(--color-blue); color: #fff; }
 
 /* Per-tournament themes, selected on the admin Tournaments tab. */
 body.theme-halloween {
-  /* black + orange, with purple/red accents; button = orange */
-  --color-blue: #141214;
+  /* orange banner, black dots; button = orange */
+  --color-blue: #d35400;
   --color-blue-dark: #0d0b0f;
   --color-yellow: #e8711a;
   --color-yellow-dark: #b8300c;
   --color-navy-text: #1c0f1f;
 }
-body.theme-halloween .site-header { background-image: radial-gradient(circle, rgba(232, 113, 26, 0.5) 7px, transparent 8px); }
+body.theme-halloween .site-header {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%23000000'/%3E%3Cellipse cx='20' cy='6' rx='4' ry='2' fill='%23d35400'/%3E%3Cellipse cx='20' cy='34' rx='4' ry='2' fill='%23d35400'/%3E%3Cellipse cx='6' cy='20' rx='2' ry='4' fill='%23d35400'/%3E%3Cellipse cx='34' cy='20' rx='2' ry='4' fill='%23d35400'/%3E%3Cellipse cx='10' cy='10' rx='3' ry='1.6' fill='%23d35400' transform='rotate(45 10 10)'/%3E%3Cellipse cx='30' cy='10' rx='3' ry='1.6' fill='%23d35400' transform='rotate(-45 30 10)'/%3E%3Cellipse cx='10' cy='30' rx='3' ry='1.6' fill='%23d35400' transform='rotate(-45 10 30)'/%3E%3Cellipse cx='30' cy='30' rx='3' ry='1.6' fill='%23d35400' transform='rotate(45 30 30)'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%23d35400'/%3E%3Ccircle cx='13' cy='24' r='2' fill='%23d35400'/%3E%3Ccircle cx='27' cy='16' r='2' fill='%23d35400'/%3E%3C/svg%3E");
+}
 
 body.theme-christmas {
   /* red background with green dots; gold button */
@@ -299,7 +302,9 @@ body.theme-christmas {
   --color-yellow-dark: #a8862a;
   --color-navy-text: #0b2e22;
 }
-body.theme-christmas .site-header { background-image: radial-gradient(circle, rgba(34, 120, 58, 0.6) 7px, transparent 8px); }
+body.theme-christmas .site-header {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%2322783a'/%3E%3Cellipse cx='20' cy='6' rx='4' ry='2' fill='%237a1620'/%3E%3Cellipse cx='20' cy='34' rx='4' ry='2' fill='%237a1620'/%3E%3Cellipse cx='6' cy='20' rx='2' ry='4' fill='%237a1620'/%3E%3Cellipse cx='34' cy='20' rx='2' ry='4' fill='%237a1620'/%3E%3Cellipse cx='10' cy='10' rx='3' ry='1.6' fill='%237a1620' transform='rotate(45 10 10)'/%3E%3Cellipse cx='30' cy='10' rx='3' ry='1.6' fill='%237a1620' transform='rotate(-45 30 10)'/%3E%3Cellipse cx='10' cy='30' rx='3' ry='1.6' fill='%237a1620' transform='rotate(-45 10 30)'/%3E%3Cellipse cx='30' cy='30' rx='3' ry='1.6' fill='%237a1620' transform='rotate(45 30 30)'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%237a1620'/%3E%3Ccircle cx='13' cy='24' r='2' fill='%237a1620'/%3E%3Ccircle cx='27' cy='16' r='2' fill='%237a1620'/%3E%3C/svg%3E");
+}
 
 body.theme-chinese_new_year {
   /* red background with white dots; red button with white text */
@@ -309,7 +314,9 @@ body.theme-chinese_new_year {
   --color-yellow-dark: #8f0c20;
   --color-navy-text: #3a1208;
 }
-body.theme-chinese_new_year .site-header { background-image: radial-gradient(circle, rgba(255, 255, 255, 0.55) 7px, transparent 8px); }
+body.theme-chinese_new_year .site-header {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%23ffffff'/%3E%3Cellipse cx='20' cy='6' rx='4' ry='2' fill='%239e1420'/%3E%3Cellipse cx='20' cy='34' rx='4' ry='2' fill='%239e1420'/%3E%3Cellipse cx='6' cy='20' rx='2' ry='4' fill='%239e1420'/%3E%3Cellipse cx='34' cy='20' rx='2' ry='4' fill='%239e1420'/%3E%3Cellipse cx='10' cy='10' rx='3' ry='1.6' fill='%239e1420' transform='rotate(45 10 10)'/%3E%3Cellipse cx='30' cy='10' rx='3' ry='1.6' fill='%239e1420' transform='rotate(-45 30 10)'/%3E%3Cellipse cx='10' cy='30' rx='3' ry='1.6' fill='%239e1420' transform='rotate(-45 10 30)'/%3E%3Cellipse cx='30' cy='30' rx='3' ry='1.6' fill='%239e1420' transform='rotate(45 30 30)'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%239e1420'/%3E%3Ccircle cx='13' cy='24' r='2' fill='%239e1420'/%3E%3Ccircle cx='27' cy='16' r='2' fill='%239e1420'/%3E%3C/svg%3E");
+}
 body.theme-chinese_new_year button,
 body.theme-chinese_new_year input[type="submit"] { color: #fff; }
 
