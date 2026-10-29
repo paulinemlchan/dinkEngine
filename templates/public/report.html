@@ -17,6 +17,7 @@
   {% if not matches %}
     <p>No matches assigned yet.</p>
   {% else %}
+    <div class="table-responsive">
     <table>
       <thead><tr><th>Court</th><th>Match</th><th>Partner</th><th>Opponents</th><th>Score</th></tr></thead>
       <tbody>
@@ -31,6 +32,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% endif %}
 {% endif %}
 {% endblock %}
