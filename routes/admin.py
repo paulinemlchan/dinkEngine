@@ -13,7 +13,7 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 THEMES = ["normal", "halloween", "christmas", "chinese_new_year"]
 
-# Minimal magic-byte check so a renamed non-image file can't be stored as a "logo".
+# Minimal magic-byte check so a renamed non-image file can't be stored as a "banner".
 _IMAGE_SIGNATURES = {
     "png": (b"\x89PNG\r\n\x1a\n",),
     "jpg": (b"\xff\xd8\xff",),
@@ -23,15 +23,15 @@ _IMAGE_SIGNATURES = {
 }
 
 
-def _save_theme_logo(tournament_id, file_storage):
-    """Validate and store an uploaded logo, returning its filename, or None if no file was given."""
+def _save_theme_banner(tournament_id, file_storage):
+    """Validate and store an uploaded banner, returning its filename, or None if no file was given."""
     if not file_storage or not file_storage.filename:
         return None
 
     ext = secure_filename(file_storage.filename).rsplit(".", 1)[-1].lower()
-    allowed = current_app.config["THEME_LOGO_ALLOWED_EXTENSIONS"]
+    allowed = current_app.config["THEME_BANNER_ALLOWED_EXTENSIONS"]
     if "." not in file_storage.filename or ext not in allowed:
-        raise ValueError(f"Logo must be one of: {', '.join(sorted(allowed))}.")
+        raise ValueError(f"Banner must be one of: {', '.join(sorted(allowed))}.")
 
     header = file_storage.stream.read(16)
     file_storage.stream.seek(0)
@@ -42,11 +42,12 @@ def _save_theme_logo(tournament_id, file_storage):
     if not valid:
         raise ValueError("That file doesn't look like a valid image.")
 
-    upload_folder = current_app.config["THEME_LOGO_UPLOAD_FOLDER"]
+    upload_folder = current_app.config["THEME_BANNER_UPLOAD_FOLDER"]
     os.makedirs(upload_folder, exist_ok=True)
     filename = f"tournament_{tournament_id}.{ext}"
     file_storage.save(os.path.join(upload_folder, filename))
     return filename
+
 
 
 
@@ -111,14 +112,14 @@ def tournaments():
         elif action == "delete":
             tournament_id = request.form.get("tournament_id")
             row = db.execute(
-                "SELECT logo_filename FROM tournaments WHERE id = ?", (tournament_id,)
+                "SELECT banner_filename FROM tournaments WHERE id = ?", (tournament_id,)
             ).fetchone()
             db.execute("DELETE FROM tournaments WHERE id = ?", (tournament_id,))
             db.commit()
-            if row and row["logo_filename"]:
-                logo_path = os.path.join(current_app.config["THEME_LOGO_UPLOAD_FOLDER"], row["logo_filename"])
-                if os.path.exists(logo_path):
-                    os.remove(logo_path)
+            if row and row["banner_filename"]:
+                banner_path = os.path.join(current_app.config["THEME_BANNER_UPLOAD_FOLDER"], row["banner_filename"])
+                if os.path.exists(banner_path):
+                    os.remove(banner_path)
             if str(session.get("tournament_id")) == str(tournament_id):
                 session.pop("tournament_id", None)
             flash("Tournament deleted.", "success")
@@ -140,21 +141,21 @@ def tournaments():
                 flash("Unknown theme.", "error")
             else:
                 row = db.execute(
-                    "SELECT logo_filename FROM tournaments WHERE id = ?", (tournament_id,)
+                    "SELECT banner_filename FROM tournaments WHERE id = ?", (tournament_id,)
                 ).fetchone()
                 try:
-                    new_filename = _save_theme_logo(tournament_id, request.files.get("logo"))
+                    new_filename = _save_theme_banner(tournament_id, request.files.get("banner"))
                 except ValueError as e:
                     flash(str(e), "error")
                 else:
                     if new_filename is not None:
-                        old_filename = row["logo_filename"] if row else None
+                        old_filename = row["banner_filename"] if row else None
                         if old_filename and old_filename != new_filename:
-                            old_path = os.path.join(current_app.config["THEME_LOGO_UPLOAD_FOLDER"], old_filename)
+                            old_path = os.path.join(current_app.config["THEME_BANNER_UPLOAD_FOLDER"], old_filename)
                             if os.path.exists(old_path):
                                 os.remove(old_path)
                         db.execute(
-                            "UPDATE tournaments SET theme = ?, logo_filename = ? WHERE id = ?",
+                            "UPDATE tournaments SET theme = ?, banner_filename = ? WHERE id = ?",
                             (theme, new_filename, tournament_id),
                         )
                     else:

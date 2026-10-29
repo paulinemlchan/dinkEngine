@@ -11,52 +11,58 @@
 </form>
 
 <h2>All tournaments</h2>
-<ul class="player-list">
+<ul class="player-list tournament-list">
   {% for t in tournaments %}
     <li>
-      <form method="post" action="{{ url_for('admin.tournaments') }}" class="inline-form">
-        <input type="hidden" name="action" value="rename">
-        <input type="hidden" name="tournament_id" value="{{ t.id }}">
-        <input type="text" name="name" value="{{ t.name }}" maxlength="120" required>
-        <button type="submit">Rename</button>
-      </form>
-      {% if t.id == active_tournament_id %}<strong>(active)</strong>{% endif %}
-      <form method="post" class="inline-form" enctype="multipart/form-data">
-        <input type="hidden" name="action" value="set_theme">
-        <input type="hidden" name="tournament_id" value="{{ t.id }}">
-        <label>Theme
-          <select name="theme">
-            {% for theme in themes %}
-              <option value="{{ theme }}" {{ 'selected' if t.theme == theme else '' }}>
-                {{ {'normal': 'Normal', 'halloween': 'Halloween', 'christmas': 'Christmas', 'chinese_new_year': 'Chinese New Year'}[theme] }}
-              </option>
-            {% endfor %}
-          </select>
-        </label>
-        {% if t.logo_filename %}
-          <img src="{{ url_for('static', filename='uploads/theme_logos/' ~ t.logo_filename) }}" alt="Current logo" class="theme-logo-preview">
-        {% endif %}
-        <label>Logo image
-          <input type="file" name="logo" accept="image/png,image/jpeg,image/gif,image/webp">
-        </label>
-        <button type="submit">Save theme</button>
-      </form>
-      <span class="tournament-actions">
-        {% if t.id != active_tournament_id %}
-        <form method="post" class="inline-form">
-          <input type="hidden" name="action" value="select">
+      <div class="tournament-name-cell">
+        <form method="post" action="{{ url_for('admin.tournaments') }}" class="inline-form">
+          <input type="hidden" name="action" value="rename">
           <input type="hidden" name="tournament_id" value="{{ t.id }}">
-          <button type="submit">Select</button>
+          <input type="text" name="name" value="{{ t.name }}" maxlength="120" required>
+          <button type="submit">Rename</button>
         </form>
-        {% endif %}
-        <a href="{{ url_for('public.scoring', tournament_id=t.id) }}">View public pages</a>
-        <form method="post" class="inline-form"
-              onsubmit="return confirm('Delete tournament {{ t.name }} and all its players, courts and matches? This cannot be undone.');">
-          <input type="hidden" name="action" value="delete">
+        {% if t.id == active_tournament_id %}<strong>(active)</strong>{% endif %}
+      </div>
+      <div class="tournament-theme-cell">
+        <form method="post" class="inline-form" enctype="multipart/form-data">
+          <input type="hidden" name="action" value="set_theme">
           <input type="hidden" name="tournament_id" value="{{ t.id }}">
-          <button type="submit">Delete</button>
+          <label>Theme
+            <select name="theme">
+              {% for theme in themes %}
+                <option value="{{ theme }}" {{ 'selected' if t.theme == theme else '' }}>
+                  {{ {'normal': 'Normal', 'halloween': 'Halloween', 'christmas': 'Christmas', 'chinese_new_year': 'Chinese New Year'}[theme] }}
+                </option>
+              {% endfor %}
+            </select>
+          </label>
+          {% if t.banner_filename %}
+            <img src="{{ url_for('static', filename='uploads/theme_banners/' ~ t.banner_filename) }}" alt="Current banner" class="theme-banner-preview">
+          {% endif %}
+          <label>Banner image
+            <input type="file" name="banner" accept="image/png,image/jpeg,image/gif,image/webp">
+          </label>
+          <button type="submit">Save theme</button>
         </form>
-      </span>
+      </div>
+      <div class="tournament-actions-cell">
+        <span class="tournament-actions">
+          {% if t.id != active_tournament_id %}
+          <form method="post" class="inline-form">
+            <input type="hidden" name="action" value="select">
+            <input type="hidden" name="tournament_id" value="{{ t.id }}">
+            <button type="submit">Select</button>
+          </form>
+          {% endif %}
+          <a href="{{ url_for('public.scoring', tournament_id=t.id) }}">View public pages</a>
+          <form method="post" class="inline-form"
+                onsubmit="return confirm('Delete tournament {{ t.name }} and all its players, courts and matches? This cannot be undone.');">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="tournament_id" value="{{ t.id }}">
+            <button type="submit">Delete</button>
+          </form>
+        </span>
+      </div>
     </li>
   {% else %}
     <li>No tournaments yet. Create one above.</li>
