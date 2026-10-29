@@ -9,6 +9,8 @@ from routes.auth import login_required
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
+THEMES = ["normal", "halloween", "christmas", "chinese_new_year"]
+
 
 def tournament_required(view):
     """Ensures an active tournament is selected in the session and makes it
@@ -86,6 +88,16 @@ def tournaments():
                 db.commit()
                 flash("Tournament renamed.", "success")
 
+        elif action == "set_theme":
+            tournament_id = request.form.get("tournament_id")
+            theme = request.form.get("theme", "")
+            if theme not in THEMES:
+                flash("Unknown theme.", "error")
+            else:
+                db.execute("UPDATE tournaments SET theme = ? WHERE id = ?", (theme, tournament_id))
+                db.commit()
+                flash("Tournament theme updated.", "success")
+
         return redirect(url_for("admin.tournaments"))
 
     all_tournaments = db.execute("SELECT * FROM tournaments ORDER BY created_at DESC").fetchall()
@@ -93,6 +105,7 @@ def tournaments():
         "admin/tournaments.html",
         tournaments=all_tournaments,
         active_tournament_id=session.get("tournament_id"),
+        themes=THEMES,
     )
 
 

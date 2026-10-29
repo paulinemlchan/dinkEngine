@@ -13,11 +13,20 @@ body {
   color: var(--color-navy-text);
 }
 .site-header {
+  position: relative;
   background: var(--color-blue);
   background-image: radial-gradient(circle, rgba(215, 222, 46, 0.55) 7px, transparent 8px);
   background-size: 54px 54px;
   padding: 1.75rem 1.5rem 1.25rem;
   text-align: center;
+}
+.site-theme-logo {
+  position: absolute;
+  top: 0.5rem;
+  left: 1rem;
+  height: 64px;
+  width: 64px;
+  border-radius: 50%;
 }
 .site-header-inner {
   display: flex;
@@ -256,4 +265,32 @@ th { background: var(--color-blue); color: #fff; }
   font-size: 1.1rem;
   margin-top: 1rem;
 }
+
+/* Per-tournament themes, selected on the admin Tournaments tab. */
+body.theme-halloween {
+  --color-blue: #1c1a17;
+  --color-blue-dark: #0d0c0a;
+  --color-yellow: #caa23d;
+  --color-yellow-dark: #a9842b;
+  --color-navy-text: #2a2110;
+}
+body.theme-halloween .site-header { background-image: radial-gradient(circle, rgba(202, 162, 61, 0.55) 7px, transparent 8px); }
+
+body.theme-christmas {
+  --color-blue: #7a1620;
+  --color-blue-dark: #0b3d23;
+  --color-yellow: #d4af37;
+  --color-yellow-dark: #b1912c;
+  --color-navy-text: #1a2e1a;
+}
+body.theme-christmas .site-header { background-image: radial-gradient(circle, rgba(212, 175, 55, 0.55) 7px, transparent 8px); }
+
+body.theme-chinese_new_year {
+  --color-blue: #b32024;
+  --color-blue-dark: #7a1319;
+  --color-yellow: #d4af37;
+  --color-yellow-dark: #b1912c;
+  --color-navy-text: #2a0d0f;
+}
+body.theme-chinese_new_year .site-header { background-image: radial-gradient(circle, rgba(212, 175, 55, 0.55) 7px, transparent 8px); }
 

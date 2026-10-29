@@ -6,8 +6,11 @@
   <title>DinkEngine</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body class="theme-{{ tournament.theme if tournament else 'normal' }}">
   <header class="site-header">
+    {% if tournament and tournament.theme != 'normal' %}
+      <img class="site-theme-logo" src="{{ url_for('static', filename='img/themes/' ~ tournament.theme ~ '.png') }}" alt="">
+    {% endif %}
     <div class="site-header-inner">
       <span class="site-title">DinkEngine</span>
       <span class="site-tagline">Pickleball Scheduling &amp; Scoring</span>
