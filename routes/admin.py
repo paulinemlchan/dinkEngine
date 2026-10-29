@@ -1,10 +1,8 @@
-import colorsys
 import itertools
 import os
 from functools import wraps
 
 from flask import Blueprint, current_app, flash, g, redirect, render_template, request, session, url_for
-from PIL import Image
 from werkzeug.utils import secure_filename
 
 from db import get_db
@@ -49,43 +47,6 @@ def _save_theme_logo(tournament_id, file_storage):
     filename = f"tournament_{tournament_id}.{ext}"
     file_storage.save(os.path.join(upload_folder, filename))
     return filename
-
-
-def _extract_theme_colors(image_path):
-    """Build a small CSS palette from a logo's dominant colors, or None if it can't be read."""
-    try:
-        img = Image.open(image_path).convert("RGB")
-        img.thumbnail((120, 120))
-        quantized = img.quantize(colors=8, method=Image.MEDIANCUT).convert("RGB")
-        counts = sorted(quantized.getcolors(maxcolors=64) or [], reverse=True)
-    except Exception:
-        return None
-    if not counts:
-        return None
-
-    candidates = [rgb for _, rgb in counts[:5]]
-
-    def hls(rgb):
-        r, g, b = (c / 255 for c in rgb)
-        return colorsys.rgb_to_hls(r, g, b)  # (hue, lightness, saturation)
-
-    darkest = min(candidates, key=lambda c: hls(c)[1])
-    most_vivid = max(candidates, key=lambda c: hls(c)[2])
-
-    def with_lightness(rgb, lightness, min_saturation=None):
-        hue, _, saturation = hls(rgb)
-        if min_saturation is not None:
-            saturation = max(saturation, min_saturation)
-        r, g, b = colorsys.hls_to_rgb(hue, lightness, saturation)
-        return "#%02x%02x%02x" % (round(r * 255), round(g * 255), round(b * 255))
-
-    return {
-        "primary": with_lightness(darkest, 0.22),
-        "primary_dark": with_lightness(darkest, 0.12),
-        "accent": with_lightness(most_vivid, 0.55, min_saturation=0.55),
-        "accent_dark": with_lightness(most_vivid, 0.40, min_saturation=0.55),
-        "text": with_lightness(darkest, 0.12),
-    }
 
 
 
@@ -192,31 +153,10 @@ def tournaments():
                             old_path = os.path.join(current_app.config["THEME_LOGO_UPLOAD_FOLDER"], old_filename)
                             if os.path.exists(old_path):
                                 os.remove(old_path)
-                        logo_path = os.path.join(current_app.config["THEME_LOGO_UPLOAD_FOLDER"], new_filename)
-                        colors = _extract_theme_colors(logo_path)
-                        if colors is None:
-                            db.execute(
-                                "UPDATE tournaments SET theme = ?, logo_filename = ? WHERE id = ?",
-                                (theme, new_filename, tournament_id),
-                            )
-                            flash("Logo saved, but its colors couldn't be read; using the default theme palette.", "error")
-                        else:
-                            db.execute(
-                                """UPDATE tournaments SET theme = ?, logo_filename = ?,
-                                       theme_color_primary = ?, theme_color_primary_dark = ?,
-                                       theme_color_accent = ?, theme_color_accent_dark = ?, theme_color_text = ?
-                                   WHERE id = ?""",
-                                (
-                                    theme,
-                                    new_filename,
-                                    colors["primary"],
-                                    colors["primary_dark"],
-                                    colors["accent"],
-                                    colors["accent_dark"],
-                                    colors["text"],
-                                    tournament_id,
-                                ),
-                            )
+                        db.execute(
+                            "UPDATE tournaments SET theme = ?, logo_filename = ? WHERE id = ?",
+                            (theme, new_filename, tournament_id),
+                        )
                     else:
                         db.execute("UPDATE tournaments SET theme = ? WHERE id = ?", (theme, tournament_id))
                     db.commit()

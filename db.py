@@ -41,15 +41,6 @@ def _migrate(db):
         db.execute("ALTER TABLE tournaments ADD COLUMN theme TEXT NOT NULL DEFAULT 'normal'")
     if "logo_filename" not in tournament_columns:
         db.execute("ALTER TABLE tournaments ADD COLUMN logo_filename TEXT")
-    for color_column in (
-        "theme_color_primary",
-        "theme_color_primary_dark",
-        "theme_color_accent",
-        "theme_color_accent_dark",
-        "theme_color_text",
-    ):
-        if color_column not in tournament_columns:
-            db.execute(f"ALTER TABLE tournaments ADD COLUMN {color_column} TEXT")
 
     slam_columns = {row["name"] for row in db.execute("PRAGMA table_info(slam_matches)")}
     if "server_name" not in slam_columns:

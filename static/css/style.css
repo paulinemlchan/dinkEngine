@@ -21,12 +21,13 @@ body {
   text-align: center;
 }
 .site-theme-logo {
-  position: absolute;
-  top: 0.5rem;
-  left: 1rem;
-  height: 64px;
-  width: 64px;
+  display: block;
+  margin: 0 auto 0.5rem;
+  height: 120px;
+  width: 120px;
+  max-height: 100%;
   border-radius: 50%;
+  object-fit: contain;
 }
 .site-header-inner {
   display: flex;
@@ -276,29 +277,32 @@ th { background: var(--color-blue); color: #fff; }
 
 /* Per-tournament themes, selected on the admin Tournaments tab. */
 body.theme-halloween {
-  --color-blue: #1c1a17;
-  --color-blue-dark: #0d0c0a;
-  --color-yellow: #caa23d;
-  --color-yellow-dark: #a9842b;
-  --color-navy-text: #2a2110;
+  /* black + orange, with purple/red accents; button = orange */
+  --color-blue: #141214;
+  --color-blue-dark: #0d0b0f;
+  --color-yellow: #e8711a;
+  --color-yellow-dark: #b8300c;
+  --color-navy-text: #1c0f1f;
 }
-body.theme-halloween .site-header { background-image: radial-gradient(circle, rgba(202, 162, 61, 0.55) 7px, transparent 8px); }
+body.theme-halloween .site-header { background-image: radial-gradient(circle, rgba(106, 13, 173, 0.45) 7px, transparent 8px); }
 
 body.theme-christmas {
+  /* red + pine green + gold, with silver/white accents; button = gold */
   --color-blue: #7a1620;
-  --color-blue-dark: #0b3d23;
+  --color-blue-dark: #0b3d2c;
   --color-yellow: #d4af37;
-  --color-yellow-dark: #b1912c;
-  --color-navy-text: #1a2e1a;
+  --color-yellow-dark: #a8862a;
+  --color-navy-text: #0b2e22;
 }
-body.theme-christmas .site-header { background-image: radial-gradient(circle, rgba(212, 175, 55, 0.55) 7px, transparent 8px); }
+body.theme-christmas .site-header { background-image: radial-gradient(circle, rgba(255, 255, 255, 0.55) 7px, transparent 8px); }
 
 body.theme-chinese_new_year {
-  --color-blue: #b32024;
-  --color-blue-dark: #7a1319;
-  --color-yellow: #d4af37;
-  --color-yellow-dark: #b1912c;
-  --color-navy-text: #2a0d0f;
+  /* red + gold/orange; button = red */
+  --color-blue: #8a4a12;
+  --color-blue-dark: #5c0f12;
+  --color-yellow: #c8102e;
+  --color-yellow-dark: #8f0c20;
+  --color-navy-text: #3a1208;
 }
 body.theme-chinese_new_year .site-header { background-image: radial-gradient(circle, rgba(212, 175, 55, 0.55) 7px, transparent 8px); }
 

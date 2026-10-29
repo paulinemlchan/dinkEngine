@@ -3,20 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DinkEngine</title>
+  <title>{{ tournament.name if tournament else 'DinkEngine' }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  {% if tournament and tournament.theme != 'normal' and tournament.theme_color_primary %}
-    <style>
-      /* Overrides the static theme palette with colors picked from this tournament's uploaded logo. */
-      body.theme-{{ tournament.theme }} {
-        --color-blue: {{ tournament.theme_color_primary }};
-        --color-blue-dark: {{ tournament.theme_color_primary_dark }};
-        --color-yellow: {{ tournament.theme_color_accent }};
-        --color-yellow-dark: {{ tournament.theme_color_accent_dark }};
-        --color-navy-text: {{ tournament.theme_color_text }};
-      }
-    </style>
-  {% endif %}
 </head>
 <body class="theme-{{ tournament.theme if tournament else 'normal' }}">
   <header class="site-header">
