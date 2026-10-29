@@ -40,8 +40,8 @@ body {
   object-fit: cover;
   margin: 0 auto;
 }
-@media (min-width: 840px) {
-  .site-banner-image { max-width: 840px; }
+@media (min-width: 1120px) {
+  .site-banner-image { max-width: 1120px; }
 }
 .site-header-inner {
   display: flex;
