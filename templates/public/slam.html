@@ -6,12 +6,14 @@
     <div class="slam-player slam-player-tbd">TBD</div>
   {% elif match.winner_name %}
     <div class="slam-player {{ 'slam-player-winner' if match.winner_name == name else 'slam-player-loser' }}">{{ name }}{{ '*' if serving else '' }}</div>
-  {% else %}
+  {% elif session.get('is_admin') %}
     <form method="post" action="{{ url_for('public.slam_pick', tournament_id=tournament.id) }}" class="slam-pick-form">
       <input type="hidden" name="round" value="{{ round_number }}">
       <input type="hidden" name="slot" value="{{ slot }}">
       <button type="submit" name="winner" value="{{ name }}" class="slam-player-button">{{ name }}{{ '*' if serving else '' }}</button>
     </form>
+  {% else %}
+    <div class="slam-player">{{ name }}{{ '*' if serving else '' }}</div>
   {% endif %}
 {% endmacro %}
 {% block content %}

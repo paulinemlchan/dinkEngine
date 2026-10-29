@@ -21,12 +21,18 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "")
         password = request.form.get("password", "")
-        valid = username == current_app.config["ADMIN_USERNAME"] and check_password_hash(
+        is_admin = username == current_app.config["ADMIN_USERNAME"] and check_password_hash(
             current_app.config["ADMIN_PASSWORD_HASH"], password
         )
-        if valid:
+        is_superuser = not is_admin and any(
+            username == account["username"] and check_password_hash(account["password_hash"], password)
+            for account in current_app.config["SUPERUSER_ACCOUNTS"]
+        )
+        if is_admin or is_superuser:
             session.clear()
             session["is_admin"] = True
+            if is_superuser:
+                session["is_superuser"] = True
             return redirect(request.args.get("next") or url_for("admin.tournaments"))
         return render_template("login.html", error="Invalid username or password.")
     return render_template("login.html")

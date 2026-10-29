@@ -37,6 +37,17 @@ $env:SECRET_KEY = "a-random-secret-string"
 python app.py
 ```
 
+There are also two **superuser** accounts (default `superuser1`/`superuser2`,
+password `changeme123`) that can pick 1-Point Slam winners and restart the
+bracket, but cannot access the Randomizer tab. Override them the same way:
+
+```powershell
+$env:SUPERUSER1_USERNAME = "name1"
+$env:SUPERUSER1_PASSWORD = "strong-password-1"
+$env:SUPERUSER2_USERNAME = "name2"
+$env:SUPERUSER2_PASSWORD = "strong-password-2"
+```
+
 ## Pages
 
 - `/login` — admin login
@@ -82,5 +93,7 @@ later changes, `git pull` in the Bash console and hit **Reload** again.
 
 **Admin credentials:** Beginner-tier manually-configured apps don't get a
 dashboard environment-variables UI, so `pythonanywhere_wsgi_template.py` sets
-`ADMIN_USERNAME`/`ADMIN_PASSWORD`/`SECRET_KEY` directly in the WSGI file. That
-file lives only in your own PythonAnywhere account, not in this repo.
+`ADMIN_USERNAME`/`ADMIN_PASSWORD`/`SECRET_KEY` (plus the two superuser
+accounts' `SUPERUSER1_USERNAME`/`SUPERUSER1_PASSWORD`/`SUPERUSER2_USERNAME`/
+`SUPERUSER2_PASSWORD`) directly in the WSGI file. That file lives only in
+your own PythonAnywhere account, not in this repo.

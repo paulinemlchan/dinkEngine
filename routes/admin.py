@@ -459,6 +459,10 @@ def save_match(court_id, slot):
 @login_required
 @tournament_required
 def randomizer():
+    if session.get("is_superuser"):
+        flash("Superusers cannot access the Randomizer.", "error")
+        return redirect(url_for("admin.tournaments"))
+
     db = get_db()
     tournament_id = g.tournament["id"]
     all_players = db.execute(

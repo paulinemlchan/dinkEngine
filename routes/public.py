@@ -302,6 +302,9 @@ def slam_pick(tournament_id):
     db = get_db()
     _get_tournament(db, tournament_id)
 
+    if not session.get("is_admin"):
+        abort(403)
+
     round_num = request.form.get("round", type=int)
     slot = request.form.get("slot", type=int)
     winner = request.form.get("winner", "").strip()

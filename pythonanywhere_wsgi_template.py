@@ -20,5 +20,9 @@ if path not in sys.path:
 os.environ.setdefault("ADMIN_USERNAME", "yourname")
 os.environ.setdefault("ADMIN_PASSWORD", "your-strong-password")
 os.environ.setdefault("SECRET_KEY", "a-random-secret-string")
+os.environ.setdefault("SUPERUSER1_USERNAME", "superuser1")
+os.environ.setdefault("SUPERUSER1_PASSWORD", "another-strong-password")
+os.environ.setdefault("SUPERUSER2_USERNAME", "superuser2")
+os.environ.setdefault("SUPERUSER2_PASSWORD", "yet-another-strong-password")
 
 from app import app as application  # noqa: E402

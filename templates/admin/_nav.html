@@ -3,6 +3,8 @@
   <a href="{{ url_for('admin.players') }}">Players</a>
   <a href="{{ url_for('admin.courts') }}">Courts</a>
   <a href="{{ url_for('admin.matches') }}">Matches</a>
-  <a href="{{ url_for('admin.randomizer') }}">Randomizer</a>
+  {% if not session.get('is_superuser') %}
+    <a href="{{ url_for('admin.randomizer') }}">Randomizer</a>
+  {% endif %}
 </nav>
 {% if tournament %}<p class="active-tournament">Managing tournament: <strong>{{ tournament.name }}</strong></p>{% endif %}

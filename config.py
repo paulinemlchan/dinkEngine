@@ -8,6 +8,19 @@ ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 # Default password is "changeme123" unless overridden via the ADMIN_PASSWORD env var.
 ADMIN_PASSWORD_HASH = generate_password_hash(os.environ.get("ADMIN_PASSWORD", "changeme123"))
 
+# Superusers can pick 1-Point Slam winners and restart the bracket, like the admin, but
+# cannot access the Randomizer tab. Default passwords are "changeme123" unless overridden.
+SUPERUSER_ACCOUNTS = [
+    {
+        "username": os.environ.get("SUPERUSER1_USERNAME", "superuser1"),
+        "password_hash": generate_password_hash(os.environ.get("SUPERUSER1_PASSWORD", "changeme123")),
+    },
+    {
+        "username": os.environ.get("SUPERUSER2_USERNAME", "superuser2"),
+        "password_hash": generate_password_hash(os.environ.get("SUPERUSER2_PASSWORD", "changeme123")),
+    },
+]
+
 DATABASE = os.environ.get("DATABASE", os.path.join(os.path.dirname(__file__), "dinkengine.sqlite3"))
 
 MAX_PLAYERS = 32
