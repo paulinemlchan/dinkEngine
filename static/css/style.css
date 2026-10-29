@@ -235,6 +235,7 @@ th { background: var(--color-blue); color: #fff; }
 .slam-player-tbd { color: #999; font-style: italic; }
 .slam-player-winner { font-weight: 700; color: #1b7a1b; }
 .slam-player-loser { color: #999; text-decoration: line-through; }
+.slam-player-server { font-weight: 700; }
 .slam-player-button {
   width: 100%;
   text-align: left;

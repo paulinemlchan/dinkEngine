@@ -10,6 +10,13 @@ SLAM_ROUND_SLOTS = {1: 16, 2: 8, 3: 4, 4: 2, 5: 1}
 SLAM_ROUND_LABELS = {1: "Round 1", 2: "Round 2", 3: "Round 3", 4: "Semifinals", 5: "Final"}
 
 
+def _pick_server(player1_name, player2_name):
+    """Randomly pick who serves first, or None when the pairing isn't a real match yet."""
+    if not player1_name or not player2_name or "BYE" in (player1_name, player2_name):
+        return None
+    return random.choice([player1_name, player2_name])
+
+
 def _get_tournament(db, tournament_id):
     tournament = db.execute("SELECT * FROM tournaments WHERE id = ?", (tournament_id,)).fetchone()
     if tournament is None:
@@ -280,10 +287,11 @@ def slam_start(tournament_id):
 
     db.execute("DELETE FROM slam_matches WHERE tournament_id = ?", (tournament_id,))
     for slot in range(16):
+        player1_name, player2_name = names[slot * 2], names[slot * 2 + 1]
         db.execute(
-            """INSERT INTO slam_matches (tournament_id, round, slot, player1_name, player2_name)
-               VALUES (?, 1, ?, ?, ?)""",
-            (tournament_id, slot, names[slot * 2], names[slot * 2 + 1]),
+            """INSERT INTO slam_matches (tournament_id, round, slot, player1_name, player2_name, server_name)
+               VALUES (?, 1, ?, ?, ?, ?)""",
+            (tournament_id, slot, player1_name, player2_name, _pick_server(player1_name, player2_name)),
         )
     db.commit()
     return redirect(url_for("public.slam", tournament_id=tournament_id))
@@ -326,6 +334,15 @@ def slam_pick(tournament_id):
                 winner if slot % 2 == 1 else None,
             ),
         )
+
+        next_match = db.execute(
+            "SELECT * FROM slam_matches WHERE tournament_id = ? AND round = ? AND slot = ?",
+            (tournament_id, round_num + 1, next_slot),
+        ).fetchone()
+        if next_match["server_name"] is None:
+            server_name = _pick_server(next_match["player1_name"], next_match["player2_name"])
+            if server_name is not None:
+                db.execute("UPDATE slam_matches SET server_name = ? WHERE id = ?", (server_name, next_match["id"]))
 
     db.commit()
     return redirect(url_for("public.slam", tournament_id=tournament_id))

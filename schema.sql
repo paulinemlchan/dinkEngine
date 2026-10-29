@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS slam_matches (
     player1_name TEXT,
     player2_name TEXT,
     winner_name TEXT,
+    server_name TEXT,
     UNIQUE(tournament_id, round, slot)
 );
 
