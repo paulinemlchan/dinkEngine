@@ -28,6 +28,14 @@
       <input type="hidden" name="action" value="{{ 'restart_voting' if cat.started else 'start_voting' }}">
       <button type="submit">{{ 'Restart Voting' if cat.started else 'Start Voting' }}</button>
     </form>
+    {% if cat.started %}
+      <form method="post" class="inline-form"
+            onsubmit="return confirm('This closes voting for {{ cat.label }} and hides its public tab. Continue?');">
+        <input type="hidden" name="category" value="{{ cat.slug }}">
+        <input type="hidden" name="action" value="end_voting">
+        <button type="submit">End Voting</button>
+      </form>
+    {% endif %}
   {% endif %}
 {% endfor %}
 {% endblock %}

@@ -375,10 +375,11 @@ def awards(tournament_id, category):
     db = get_db()
     tournament = _get_tournament(db, tournament_id)
 
-    started = db.execute(
+    round_row = db.execute(
         "SELECT started FROM award_rounds WHERE tournament_id = ? AND category = ?", (tournament_id, category)
     ).fetchone()
-    started = bool(started and started["started"])
+    never_started = round_row is None
+    started = bool(round_row and round_row["started"])
 
     all_players = db.execute(
         "SELECT * FROM players WHERE tournament_id = ? ORDER BY name", (tournament_id,)
@@ -410,6 +411,7 @@ def awards(tournament_id, category):
         category=category,
         category_label=AWARD_CATEGORIES[category],
         started=started,
+        never_started=never_started,
         players=all_players,
         voter=voter,
         nominees=nominees,

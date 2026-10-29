@@ -621,6 +621,13 @@ def awards():
             )
             db.commit()
             flash(f"Voting restarted for {AWARD_CATEGORIES[category]}.", "success")
+        elif action == "end_voting":
+            db.execute(
+                "UPDATE award_rounds SET started = 0 WHERE tournament_id = ? AND category = ?",
+                (tournament_id, category),
+            )
+            db.commit()
+            flash(f"Voting ended for {AWARD_CATEGORIES[category]}.", "success")
         return redirect(url_for("admin.awards"))
 
     categories = []

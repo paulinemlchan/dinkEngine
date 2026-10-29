@@ -76,6 +76,10 @@ main {
 }
 h1 { margin-top: 0; color: var(--color-blue-dark); }
 h2 { color: var(--color-blue-dark); }
+.awards-header { display: flex; align-items: center; gap: 1rem; }
+.awards-header h1 { margin-bottom: 0.25rem; }
+.awards-badge { height: 96px; width: 96px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.awards-description { margin: 0; font-style: italic; color: var(--color-navy-text); }
 .admin-tabs {
   display: flex;
   gap: 0.75rem;
