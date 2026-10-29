@@ -604,6 +604,9 @@ def awards():
 
         if action == "start_voting":
             db.execute(
+                "DELETE FROM award_votes WHERE tournament_id = ? AND category = ?", (tournament_id, category)
+            )
+            db.execute(
                 """INSERT INTO award_rounds (tournament_id, category, started) VALUES (?, ?, 1)
                    ON CONFLICT(tournament_id, category) DO UPDATE SET started = 1""",
                 (tournament_id, category),

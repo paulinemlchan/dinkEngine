@@ -384,6 +384,14 @@ def awards(tournament_id, category):
     all_players = db.execute(
         "SELECT * FROM players WHERE tournament_id = ? ORDER BY name", (tournament_id,)
     ).fetchall()
+    voted_ids = {
+        row["voter_player_id"]
+        for row in db.execute(
+            "SELECT voter_player_id FROM award_votes WHERE tournament_id = ? AND category = ?",
+            (tournament_id, category),
+        ).fetchall()
+    }
+    voter_choices = [p for p in all_players if p["id"] not in voted_ids]
 
     voter = None
     nominees = []
@@ -412,7 +420,7 @@ def awards(tournament_id, category):
         category_label=AWARD_CATEGORIES[category],
         started=started,
         never_started=never_started,
-        players=all_players,
+        players=voter_choices,
         voter=voter,
         nominees=nominees,
         already_voted_for=already_voted_for,
