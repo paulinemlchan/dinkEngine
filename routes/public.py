@@ -1,6 +1,6 @@
 import random
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 
 from db import get_db
 
@@ -256,6 +256,13 @@ def slam(tournament_id):
 def slam_start(tournament_id):
     db = get_db()
     _get_tournament(db, tournament_id)
+
+    already_started = db.execute(
+        "SELECT 1 FROM slam_matches WHERE tournament_id = ? LIMIT 1", (tournament_id,)
+    ).fetchone()
+    if already_started and not session.get("is_admin"):
+        flash("Only an admin can restart the bracket once it has started.", "error")
+        return redirect(url_for("public.slam", tournament_id=tournament_id))
 
     names = [row["name"] for row in db.execute(
         "SELECT name FROM players WHERE tournament_id = ?", (tournament_id,)

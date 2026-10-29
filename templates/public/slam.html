@@ -19,9 +19,11 @@
   <p>{{ tournament.name }} &middot; 32 players &middot; winner takes all</p>
 </div>
 
+{% if not started or session.get('is_admin') %}
 <form method="post" action="{{ url_for('public.slam_start', tournament_id=tournament.id) }}" class="inline-form">
   <button type="submit">{{ 'Restart Bracket' if started else 'Start' }}</button>
 </form>
+{% endif %}
 
 {% if started %}
 <div class="slam-bracket">
