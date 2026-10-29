@@ -5,11 +5,15 @@
 
 {% for cat in categories %}
   <h2>{{ cat.label }}</h2>
-  {% if not cat.started %}
+  {% if cat.never_started %}
     <p>Voting has not started. The public tab stays hidden until you start it.</p>
-  {% elif not cat.results %}
-    <p>Voting is open. No votes yet.</p>
   {% else %}
+    {% if not cat.started %}
+      <p>Voting is closed. Final results:</p>
+    {% elif not cat.results %}
+      <p>Voting is open. No votes yet.</p>
+    {% endif %}
+    {% if cat.results %}
     <div class="table-responsive">
     <table>
       <thead><tr><th>Player</th><th>Points</th></tr></thead>
@@ -20,6 +24,7 @@
       </tbody>
     </table>
     </div>
+    {% endif %}
   {% endif %}
   {% if not session.get('is_superuser') %}
     <form method="post" class="inline-form"

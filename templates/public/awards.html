@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="awards-header">
-  {% if category == 'spirit_of_the_haunt' %}
-    <img src="{{ url_for('static', filename='img/awards/spirit_of_the_haunt.png') }}" alt="" class="awards-badge">
-  {% endif %}
+  <img src="{{ url_for('static', filename='img/awards/' ~ category ~ '.png') }}" alt="" class="awards-badge">
   <div>
     <h1>{{ category_label }} &ndash; {{ tournament.name }}</h1>
     {% if category == 'spirit_of_the_haunt' %}

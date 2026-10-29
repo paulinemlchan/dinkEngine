@@ -648,6 +648,7 @@ def awards():
             {
                 "slug": category,
                 "label": label,
+                "never_started": started_row is None,
                 "started": bool(started_row and started_row["started"]),
                 "results": results,
             }
