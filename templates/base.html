@@ -5,11 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DinkEngine</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% if tournament and tournament.theme != 'normal' and tournament.theme_color_primary %}
+    <style>
+      /* Overrides the static theme palette with colors picked from this tournament's uploaded logo. */
+      body.theme-{{ tournament.theme }} {
+        --color-blue: {{ tournament.theme_color_primary }};
+        --color-blue-dark: {{ tournament.theme_color_primary_dark }};
+        --color-yellow: {{ tournament.theme_color_accent }};
+        --color-yellow-dark: {{ tournament.theme_color_accent_dark }};
+        --color-navy-text: {{ tournament.theme_color_text }};
+      }
+    </style>
+  {% endif %}
 </head>
 <body class="theme-{{ tournament.theme if tournament else 'normal' }}">
   <header class="site-header">
-    {% if tournament and tournament.theme != 'normal' %}
-      <img class="site-theme-logo" src="{{ url_for('static', filename='img/themes/' ~ tournament.theme ~ '.png') }}" alt="">
+    {% if tournament and tournament.theme != 'normal' and tournament.logo_filename %}
+      <img class="site-theme-logo" src="{{ url_for('static', filename='uploads/theme_logos/' ~ tournament.logo_filename) }}" alt="">
     {% endif %}
     <div class="site-header-inner">
       <span class="site-title">DinkEngine</span>

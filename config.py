@@ -14,3 +14,7 @@ MAX_PLAYERS = 32
 MAX_COURTS = 20
 MAX_MATCHES_PER_COURT = 5
 MAX_EXCEPTIONS = 5
+
+THEME_LOGO_UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "uploads", "theme_logos")
+THEME_LOGO_ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB cap on any upload, including theme logos

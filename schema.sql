@@ -2,6 +2,12 @@ CREATE TABLE IF NOT EXISTS tournaments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     theme TEXT NOT NULL DEFAULT 'normal',
+    logo_filename TEXT,
+    theme_color_primary TEXT,
+    theme_color_primary_dark TEXT,
+    theme_color_accent TEXT,
+    theme_color_accent_dark TEXT,
+    theme_color_text TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

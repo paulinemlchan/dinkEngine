@@ -266,6 +266,14 @@ th { background: var(--color-blue); color: #fff; }
   margin-top: 1rem;
 }
 
+.theme-logo-preview {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
 /* Per-tournament themes, selected on the admin Tournaments tab. */
 body.theme-halloween {
   --color-blue: #1c1a17;
