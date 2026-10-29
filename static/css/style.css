@@ -56,6 +56,12 @@ body {
   text-transform: uppercase;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
+.site-tagline {
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  font-size: 0.95rem;
+}
 .nav {
   background: var(--color-blue-dark);
   padding: 0.75rem 1.5rem;

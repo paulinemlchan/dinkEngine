@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ tournament.name if tournament else 'DinkEngine' }}</title>
+  <title>{{ tournament.name if tournament else 'Dink Engine' }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="theme-{{ tournament.theme if tournament else 'normal' }}">
@@ -14,7 +14,10 @@
   {% else %}
     <header class="site-header">
       <div class="site-header-inner">
-        <span class="site-title">{{ tournament.name if tournament else 'DinkEngine' }}</span>
+        <span class="site-title">{{ tournament.name if tournament else 'Dink Engine' }}</span>
+        {% if not tournament %}
+          <span class="site-tagline">Plan your pickleball events</span>
+        {% endif %}
       </div>
     </header>
   {% endif %}
