@@ -14,7 +14,7 @@
 <ul class="player-list tournament-list">
   {% for t in tournaments %}
     <li>
-      <div class="tournament-name-cell">
+      <div class="t-row">
         <form method="post" action="{{ url_for('admin.tournaments') }}" class="inline-form">
           <input type="hidden" name="action" value="rename">
           <input type="hidden" name="tournament_id" value="{{ t.id }}">
@@ -22,30 +22,30 @@
           <button type="submit">Rename</button>
         </form>
         {% if t.id == active_tournament_id %}<strong>(active)</strong>{% endif %}
+        <label>Theme
+          <select name="theme" form="theme-form-{{ t.id }}">
+            {% for theme in themes %}
+              <option value="{{ theme }}" {{ 'selected' if t.theme == theme else '' }}>
+                {{ {'normal': 'Normal', 'halloween': 'Halloween', 'christmas': 'Christmas', 'chinese_new_year': 'Chinese New Year'}[theme] }}
+              </option>
+            {% endfor %}
+          </select>
+        </label>
       </div>
-      <div class="tournament-theme-cell">
-        <form method="post" class="inline-form" enctype="multipart/form-data">
+      <div class="t-row">
+        <form id="theme-form-{{ t.id }}" method="post" action="{{ url_for('admin.tournaments') }}" enctype="multipart/form-data" class="inline-form">
           <input type="hidden" name="action" value="set_theme">
           <input type="hidden" name="tournament_id" value="{{ t.id }}">
-          <label>Theme
-            <select name="theme">
-              {% for theme in themes %}
-                <option value="{{ theme }}" {{ 'selected' if t.theme == theme else '' }}>
-                  {{ {'normal': 'Normal', 'halloween': 'Halloween', 'christmas': 'Christmas', 'chinese_new_year': 'Chinese New Year'}[theme] }}
-                </option>
-              {% endfor %}
-            </select>
-          </label>
-          {% if t.banner_filename %}
-            <img src="{{ url_for('static', filename='uploads/theme_banners/' ~ t.banner_filename) }}" alt="Current banner" class="theme-banner-preview">
-          {% endif %}
-          <label>Banner image
-            <input type="file" name="banner" accept="image/png,image/jpeg,image/gif,image/webp">
-          </label>
-          <button type="submit">Save theme</button>
         </form>
+        {% if t.banner_filename %}
+          <img src="{{ url_for('static', filename='uploads/theme_banners/' ~ t.banner_filename) }}" alt="Current banner" class="theme-banner-preview">
+        {% endif %}
+        <label>Banner image
+          <input type="file" name="banner" accept="image/png,image/jpeg,image/gif,image/webp" form="theme-form-{{ t.id }}">
+        </label>
+        <button type="submit" form="theme-form-{{ t.id }}">Save theme</button>
       </div>
-      <div class="tournament-actions-cell">
+      <div class="t-row">
         <span class="tournament-actions">
           {% if t.id != active_tournament_id %}
           <form method="post" class="inline-form">
