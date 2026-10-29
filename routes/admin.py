@@ -578,3 +578,72 @@ def randomizer():
         courts_count=courts_count,
         tournament=g.tournament,
     )
+
+
+# ---------- Awards ----------
+
+@bp.route("/awards", methods=["GET", "POST"])
+@login_required
+@tournament_required
+def awards():
+    from routes.public import AWARD_CATEGORIES
+
+    db = get_db()
+    tournament_id = g.tournament["id"]
+
+    if request.method == "POST":
+        if session.get("is_superuser"):
+            flash("Only an admin can start or restart voting.", "error")
+            return redirect(url_for("admin.awards"))
+
+        action = request.form.get("action")
+        category = request.form.get("category")
+        if category not in AWARD_CATEGORIES:
+            flash("Unknown award category.", "error")
+            return redirect(url_for("admin.awards"))
+
+        if action == "start_voting":
+            db.execute(
+                """INSERT INTO award_rounds (tournament_id, category, started) VALUES (?, ?, 1)
+                   ON CONFLICT(tournament_id, category) DO UPDATE SET started = 1""",
+                (tournament_id, category),
+            )
+            db.commit()
+            flash(f"Voting started for {AWARD_CATEGORIES[category]}.", "success")
+        elif action == "restart_voting":
+            db.execute(
+                "DELETE FROM award_votes WHERE tournament_id = ? AND category = ?", (tournament_id, category)
+            )
+            db.execute(
+                """INSERT INTO award_rounds (tournament_id, category, started) VALUES (?, ?, 1)
+                   ON CONFLICT(tournament_id, category) DO UPDATE SET started = 1""",
+                (tournament_id, category),
+            )
+            db.commit()
+            flash(f"Voting restarted for {AWARD_CATEGORIES[category]}.", "success")
+        return redirect(url_for("admin.awards"))
+
+    categories = []
+    for category, label in AWARD_CATEGORIES.items():
+        started_row = db.execute(
+            "SELECT started FROM award_rounds WHERE tournament_id = ? AND category = ?", (tournament_id, category)
+        ).fetchone()
+        results = db.execute(
+            """SELECT players.name AS name, COUNT(*) AS points
+               FROM award_votes
+               JOIN players ON players.id = award_votes.nominee_player_id
+               WHERE award_votes.tournament_id = ? AND award_votes.category = ?
+               GROUP BY players.id
+               ORDER BY points DESC, players.name""",
+            (tournament_id, category),
+        ).fetchall()
+        categories.append(
+            {
+                "slug": category,
+                "label": label,
+                "started": bool(started_row and started_row["started"]),
+                "results": results,
+            }
+        )
+
+    return render_template("admin/awards.html", tournament=g.tournament, categories=categories)

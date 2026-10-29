@@ -55,3 +55,22 @@ CREATE TABLE IF NOT EXISTS slam_matches (
     UNIQUE(tournament_id, round, slot)
 );
 
+-- Award voting (e.g. "Best Dressed", "Spirit of the Haunt"): one vote per player per category.
+-- category is a slug, e.g. 'best_dressed' or 'spirit_of_the_haunt'.
+CREATE TABLE IF NOT EXISTS award_rounds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    category TEXT NOT NULL,
+    started INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(tournament_id, category)
+);
+
+CREATE TABLE IF NOT EXISTS award_votes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    category TEXT NOT NULL,
+    voter_player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+    nominee_player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+    UNIQUE(tournament_id, category, voter_player_id)
+);
+

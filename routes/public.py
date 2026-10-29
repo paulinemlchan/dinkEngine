@@ -9,6 +9,23 @@ bp = Blueprint("public", __name__)
 SLAM_ROUND_SLOTS = {1: 16, 2: 8, 3: 4, 4: 2, 5: 1}
 SLAM_ROUND_LABELS = {1: "Round 1", 2: "Round 2", 3: "Round 3", 4: "Semifinals", 5: "Final"}
 
+AWARD_CATEGORIES = {"best_dressed": "Best Dressed", "spirit_of_the_haunt": "Spirit of the Haunt"}
+
+
+@bp.app_context_processor
+def inject_started_award_categories():
+    """Makes the set of started award categories available to every template,
+    so base.html can show/hide the Best Dressed / Spirit of the Haunt nav links
+    without every route having to pass it in explicitly."""
+    tournament_id = (request.view_args or {}).get("tournament_id") or session.get("tournament_id")
+    if not tournament_id:
+        return {"started_award_categories": set()}
+    db = get_db()
+    rows = db.execute(
+        "SELECT category FROM award_rounds WHERE tournament_id = ? AND started = 1", (tournament_id,)
+    ).fetchall()
+    return {"started_award_categories": {row["category"] for row in rows}}
+
 
 def _pick_server(player1_name, player2_name):
     """Randomly pick who serves first, or None when the pairing isn't a real match yet."""
@@ -349,3 +366,93 @@ def slam_pick(tournament_id):
 
     db.commit()
     return redirect(url_for("public.slam", tournament_id=tournament_id))
+
+
+@bp.route("/t/<int:tournament_id>/awards/<category>")
+def awards(tournament_id, category):
+    if category not in AWARD_CATEGORIES:
+        abort(404)
+    db = get_db()
+    tournament = _get_tournament(db, tournament_id)
+
+    started = db.execute(
+        "SELECT started FROM award_rounds WHERE tournament_id = ? AND category = ?", (tournament_id, category)
+    ).fetchone()
+    started = bool(started and started["started"])
+
+    all_players = db.execute(
+        "SELECT * FROM players WHERE tournament_id = ? ORDER BY name", (tournament_id,)
+    ).fetchall()
+
+    voter = None
+    nominees = []
+    already_voted_for = None
+    voter_id = request.args.get("voter_id", type=int)
+    if started and voter_id is not None:
+        voter = db.execute(
+            "SELECT * FROM players WHERE id = ? AND tournament_id = ?", (voter_id, tournament_id)
+        ).fetchone()
+        if voter is not None:
+            existing_vote = db.execute(
+                """SELECT players.name FROM award_votes
+                   JOIN players ON players.id = award_votes.nominee_player_id
+                   WHERE award_votes.tournament_id = ? AND award_votes.category = ? AND award_votes.voter_player_id = ?""",
+                (tournament_id, category, voter_id),
+            ).fetchone()
+            if existing_vote is not None:
+                already_voted_for = existing_vote["name"]
+            else:
+                nominees = [p for p in all_players if p["id"] != voter_id]
+
+    return render_template(
+        "public/awards.html",
+        tournament=tournament,
+        category=category,
+        category_label=AWARD_CATEGORIES[category],
+        started=started,
+        players=all_players,
+        voter=voter,
+        nominees=nominees,
+        already_voted_for=already_voted_for,
+    )
+
+
+@bp.route("/t/<int:tournament_id>/awards/<category>/vote", methods=["POST"])
+def awards_vote(tournament_id, category):
+    if category not in AWARD_CATEGORIES:
+        abort(404)
+    db = get_db()
+    _get_tournament(db, tournament_id)
+
+    started = db.execute(
+        "SELECT started FROM award_rounds WHERE tournament_id = ? AND category = ?", (tournament_id, category)
+    ).fetchone()
+    if not (started and started["started"]):
+        abort(400)
+
+    voter_id = request.form.get("voter_id", type=int)
+    nominee_id = request.form.get("nominee_id", type=int)
+    if voter_id is None or nominee_id is None or voter_id == nominee_id:
+        abort(400)
+
+    voter = db.execute("SELECT id FROM players WHERE id = ? AND tournament_id = ?", (voter_id, tournament_id)).fetchone()
+    nominee = db.execute("SELECT id FROM players WHERE id = ? AND tournament_id = ?", (nominee_id, tournament_id)).fetchone()
+    if voter is None or nominee is None:
+        abort(400)
+
+    already_voted = db.execute(
+        "SELECT 1 FROM award_votes WHERE tournament_id = ? AND category = ? AND voter_player_id = ?",
+        (tournament_id, category, voter_id),
+    ).fetchone()
+    if already_voted:
+        flash("You've already voted in this category.", "error")
+        return redirect(url_for("public.awards", tournament_id=tournament_id, category=category, voter_id=voter_id))
+
+    db.execute(
+        """INSERT INTO award_votes (tournament_id, category, voter_player_id, nominee_player_id)
+           VALUES (?, ?, ?, ?)""",
+        (tournament_id, category, voter_id, nominee_id),
+    )
+    db.commit()
+    flash("Your vote has been recorded. Thank you!", "success")
+    return redirect(url_for("public.awards", tournament_id=tournament_id, category=category, voter_id=voter_id))

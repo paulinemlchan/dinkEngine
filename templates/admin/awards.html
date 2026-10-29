@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Awards</h1>
+{% include "admin/_nav.html" %}
+
+{% for cat in categories %}
+  <h2>{{ cat.label }}</h2>
+  {% if not cat.started %}
+    <p>Voting has not started. The public tab stays hidden until you start it.</p>
+  {% elif not cat.results %}
+    <p>Voting is open. No votes yet.</p>
+  {% else %}
+    <div class="table-responsive">
+    <table>
+      <thead><tr><th>Player</th><th>Points</th></tr></thead>
+      <tbody>
+        {% for row in cat.results %}
+          <tr><td>{{ row.name }}</td><td>{{ row.points }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  {% endif %}
+  {% if not session.get('is_superuser') %}
+    <form method="post" class="inline-form"
+          {% if cat.started %}onsubmit="return confirm('This clears all current {{ cat.label }} votes and keeps voting open. Continue?');"{% endif %}>
+      <input type="hidden" name="category" value="{{ cat.slug }}">
+      <input type="hidden" name="action" value="{{ 'restart_voting' if cat.started else 'start_voting' }}">
+      <button type="submit">{{ 'Restart Voting' if cat.started else 'Start Voting' }}</button>
+    </form>
+  {% endif %}
+{% endfor %}
+{% endblock %}

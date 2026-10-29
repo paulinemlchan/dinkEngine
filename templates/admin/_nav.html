@@ -6,5 +6,6 @@
   {% if not session.get('is_superuser') %}
     <a href="{{ url_for('admin.randomizer') }}">Randomizer</a>
   {% endif %}
+  <a href="{{ url_for('admin.awards') }}">Awards</a>
 </nav>
 {% if tournament %}<p class="active-tournament">Managing tournament: <strong>{{ tournament.name }}</strong></p>{% endif %}

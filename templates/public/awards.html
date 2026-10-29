@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ category_label }} &ndash; {{ tournament.name }}</h1>
+
+{% if not started %}
+  <p>Voting hasn't started yet. Check back once an admin opens it.</p>
+{% elif not voter %}
+  <form method="get" class="inline-form">
+    <select name="voter_id" required>
+      <option value="">-- select your name --</option>
+      {% for p in players %}
+        <option value="{{ p.id }}">{{ p.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Continue</button>
+  </form>
+{% elif already_voted_for %}
+  <p>Thanks, {{ voter.name }} &mdash; you've already voted for <strong>{{ already_voted_for }}</strong> in this category.</p>
+{% else %}
+  <p>Hi {{ voter.name }}! Who do you nominate for {{ category_label }}?</p>
+  <form method="post" action="{{ url_for('public.awards_vote', tournament_id=tournament.id, category=category) }}">
+    <input type="hidden" name="voter_id" value="{{ voter.id }}">
+    <ul class="player-list">
+      {% for p in nominees %}
+        <li>
+          <label><input type="radio" name="nominee_id" value="{{ p.id }}" required> {{ p.name }}</label>
+        </li>
+      {% endfor %}
+    </ul>
+    <button type="submit">Submit vote</button>
+  </form>
+{% endif %}
+{% endblock %}
