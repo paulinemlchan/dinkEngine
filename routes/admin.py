@@ -727,10 +727,14 @@ def knockout():
         elif action == "select":
             pool = [row["name"] for row in board[:KNOCKOUT_PICK_POOL]]
             chosen = set(request.form.getlist("player"))
+            # seed_order is the click order kept by the page script; without it, fall back to rankings order.
+            seed_order = request.form.getlist("seed_order")
             if not chosen.issubset(pool) or len(chosen) != KNOCKOUT_SIZE:
                 flash(f"Select exactly {KNOCKOUT_SIZE} players (you selected {len(chosen)}).", "error")
+            elif seed_order and (len(seed_order) != KNOCKOUT_SIZE or set(seed_order) != chosen):
+                flash("The seed order did not match the selected players. Please select them again.", "error")
             else:
-                _start_knockout(db, tournament_id, [name for name in pool if name in chosen])
+                _start_knockout(db, tournament_id, seed_order or [name for name in pool if name in chosen])
                 db.commit()
                 flash("Top 8 confirmed. The Knockout tab is now open.", "success")
 

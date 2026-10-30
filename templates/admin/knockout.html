@@ -21,10 +21,13 @@
 
 {% elif status == 'selecting' %}
   <p>Players are tied on points at the top-{{ knockout_size }} cut-off. Click players to choose exactly
-     {{ knockout_size }} from the top {{ pool|length }}. Seeds follow the rankings order of the players you choose.
+     {{ knockout_size }} from the top {{ pool|length }}. Seeds follow the order you click:
+     players above the tie start as seeds 1&ndash;{{ pool|selectattr('preselected')|list|length }} in rankings order,
+     each player you click gets the next seed, and un-clicking a player moves the players after them up one seed.
+     Seed 1 plays with seed 8, 2 with 7, 3 with 6 and 4 with 5.
      Tied players are marked <span class="knockout-tie-tag">tie</span>.</p>
   {% if not session.get('is_superuser') %}
-    <form method="post">
+    <form method="post" id="knockout-pick-form">
       <input type="hidden" name="action" value="select">
       <div class="knockout-pick-grid">
         {% for p in pool %}
@@ -33,13 +36,52 @@
           <label for="ko-pick-{{ loop.index }}" class="knockout-pick-button">
             <span class="knockout-pick-rank">#{{ p.rank }}</span>
             <span class="knockout-pick-name">{{ p.name }}</span>
+            <span class="knockout-pick-seed" data-seed-for="ko-pick-{{ loop.index }}"></span>
             <span class="knockout-pick-score">{{ p.total_score }} pts &middot; {{ "%+d"|format(p.point_difference) }}</span>
             {% if p.tied %}<span class="knockout-tie-tag">tie</span>{% endif %}
           </label>
         {% endfor %}
       </div>
+      <p id="knockout-pick-count"></p>
       <button type="submit">Confirm Top {{ knockout_size }}</button>
     </form>
+    <script>
+      (function () {
+        var form = document.getElementById("knockout-pick-form");
+        var boxes = Array.prototype.slice.call(form.querySelectorAll(".knockout-pick-input"));
+        var order = boxes.filter(function (b) { return b.checked; });
+        var size = {{ knockout_size }};
+
+        function render() {
+          boxes.forEach(function (b) {
+            var seed = order.indexOf(b) + 1;
+            form.querySelector('[data-seed-for="' + b.id + '"]').textContent = seed ? "Seed " + seed : "";
+          });
+          document.getElementById("knockout-pick-count").textContent =
+            order.length + " of " + size + " selected";
+        }
+
+        boxes.forEach(function (b) {
+          b.addEventListener("change", function () {
+            if (b.checked) { order.push(b); }
+            else { order.splice(order.indexOf(b), 1); }
+            render();
+          });
+        });
+
+        form.addEventListener("submit", function () {
+          order.forEach(function (b) {
+            var input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "seed_order";
+            input.value = b.value;
+            form.appendChild(input);
+          });
+        });
+
+        render();
+      })();
+    </script>
   {% else %}
     <p>Waiting for the admin to choose the top {{ knockout_size }}.</p>
   {% endif %}

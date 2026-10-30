@@ -331,6 +331,15 @@ th { background: var(--color-blue); color: #fff; }
 .knockout-pick-input:focus-visible + .knockout-pick-button { outline: 2px solid var(--color-blue); }
 .knockout-pick-rank { color: var(--color-blue-dark); font-weight: 700; }
 .knockout-pick-score { width: 100%; font-size: 0.85rem; color: #555; }
+.knockout-pick-seed:not(:empty) {
+  margin-left: auto;
+  background: var(--color-blue-dark);
+  color: #fff;
+  border-radius: 3px;
+  padding: 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
 .knockout-tie-tag {
   background: #b00020;
   color: #fff;
