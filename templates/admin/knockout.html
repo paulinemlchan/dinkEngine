@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Knockout Round</h1>
+{% include "admin/_nav.html" %}
+
+{% if status is none %}
+  <p>The knockout round is closed and its public tab is hidden.
+     When every match of this tournament is finished, press the button below.
+     The top {{ knockout_size }} players on the rankings are paired 1 + 8, 2 + 7, 3 + 6 and 4 + 5,
+     and those pairs play the semifinals and the final.</p>
+  {% if unscored %}
+    <p class="knockout-warning">{{ unscored }} match{{ 'es' if unscored != 1 else '' }} still {{ 'have' if unscored != 1 else 'has' }} no score.</p>
+  {% endif %}
+  {% if not session.get('is_superuser') %}
+    <form method="post" class="inline-form"
+          onsubmit="return confirm('Mark all matches of {{ tournament.name }} as complete and open the knockout round?');">
+      <input type="hidden" name="action" value="complete">
+      <button type="submit">All Matches Complete</button>
+    </form>
+  {% endif %}
+
+{% elif status == 'selecting' %}
+  <p>Players are tied on points at the top-{{ knockout_size }} cut-off. Click players to choose exactly
+     {{ knockout_size }} from the top {{ pool|length }}. Seeds follow the rankings order of the players you choose.
+     Tied players are marked <span class="knockout-tie-tag">tie</span>.</p>
+  {% if not session.get('is_superuser') %}
+    <form method="post">
+      <input type="hidden" name="action" value="select">
+      <div class="knockout-pick-grid">
+        {% for p in pool %}
+          <input type="checkbox" class="knockout-pick-input" id="ko-pick-{{ loop.index }}" name="player"
+                 value="{{ p.name }}" {{ 'checked' if p.preselected else '' }}>
+          <label for="ko-pick-{{ loop.index }}" class="knockout-pick-button">
+            <span class="knockout-pick-rank">#{{ p.rank }}</span>
+            <span class="knockout-pick-name">{{ p.name }}</span>
+            <span class="knockout-pick-score">{{ p.total_score }} pts &middot; {{ "%+d"|format(p.point_difference) }}</span>
+            {% if p.tied %}<span class="knockout-tie-tag">tie</span>{% endif %}
+          </label>
+        {% endfor %}
+      </div>
+      <button type="submit">Confirm Top {{ knockout_size }}</button>
+    </form>
+  {% else %}
+    <p>Waiting for the admin to choose the top {{ knockout_size }}.</p>
+  {% endif %}
+
+{% else %}
+  <p>The knockout round is open.
+     <a href="{{ url_for('public.knockout', tournament_id=tournament.id) }}">View the bracket</a>.</p>
+  <div class="table-responsive">
+  <table>
+    <thead><tr><th>Seed</th><th>Player</th></tr></thead>
+    <tbody>
+      {% for s in seeds %}<tr><td>{{ s.seed }}</td><td>{{ s.player_name }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <h2>Pairs</h2>
+  <ul>
+    {% for k, pair in teams.items() %}
+      <li>Pair {{ k }} (seeds {{ k }} + {{ 9 - k }}): {{ pair[0] }} &amp; {{ pair[1] }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% if status is not none and not session.get('is_superuser') %}
+  <form method="post" class="inline-form"
+        onsubmit="return confirm('This deletes the knockout bracket and hides the public Knockout tab. Continue?');">
+    <input type="hidden" name="action" value="reset">
+    <button type="submit">Reset Knockout</button>
+  </form>
+{% endif %}
+{% endblock %}

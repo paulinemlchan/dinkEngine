@@ -74,3 +74,30 @@ CREATE TABLE IF NOT EXISTS award_votes (
     UNIQUE(tournament_id, category, voter_player_id)
 );
 
+-- Knockout round: opened by the admin once all matches are complete.
+-- status: 'selecting' (points tie at the top-8 cut-off, admin picks the 8) or 'started'.
+CREATE TABLE IF NOT EXISTS knockout_state (
+    tournament_id INTEGER PRIMARY KEY REFERENCES tournaments(id) ON DELETE CASCADE,
+    status TEXT NOT NULL
+);
+
+-- The 8 qualified players. Team k (1..4) is seed k with seed 9-k: 1+8, 2+7, 3+6, 4+5.
+CREATE TABLE IF NOT EXISTS knockout_seeds (
+    tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    seed INTEGER NOT NULL,
+    player_name TEXT NOT NULL,
+    PRIMARY KEY (tournament_id, seed)
+);
+
+-- round: 1=Semifinals (slot 0: team 1 vs team 4, slot 1: team 2 vs team 3), 2=Final.
+CREATE TABLE IF NOT EXISTS knockout_matches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    round INTEGER NOT NULL,
+    slot INTEGER NOT NULL,
+    team1 INTEGER,
+    team2 INTEGER,
+    winner INTEGER,
+    UNIQUE(tournament_id, round, slot)
+);
+

@@ -658,3 +658,133 @@ def awards():
         )
 
     return render_template("admin/awards.html", tournament=g.tournament, categories=categories)
+
+
+# ---------- Knockout round ----------
+
+KNOCKOUT_SIZE = 8
+KNOCKOUT_PICK_POOL = 16
+
+
+def _knockout_has_cutoff_tie(board):
+    return len(board) > KNOCKOUT_SIZE and board[KNOCKOUT_SIZE - 1]["total_score"] == board[KNOCKOUT_SIZE]["total_score"]
+
+
+def _start_knockout(db, tournament_id, names):
+    """Seed the 8 names in ranking order and create the two semifinals (team 1 v 4, team 2 v 3)."""
+    db.execute("DELETE FROM knockout_seeds WHERE tournament_id = ?", (tournament_id,))
+    db.execute("DELETE FROM knockout_matches WHERE tournament_id = ?", (tournament_id,))
+    for seed, name in enumerate(names, start=1):
+        db.execute(
+            "INSERT INTO knockout_seeds (tournament_id, seed, player_name) VALUES (?, ?, ?)",
+            (tournament_id, seed, name),
+        )
+    for slot, (team1, team2) in enumerate([(1, 4), (2, 3)]):
+        db.execute(
+            "INSERT INTO knockout_matches (tournament_id, round, slot, team1, team2) VALUES (?, 1, ?, ?, ?)",
+            (tournament_id, slot, team1, team2),
+        )
+    db.execute(
+        """INSERT INTO knockout_state (tournament_id, status) VALUES (?, 'started')
+           ON CONFLICT(tournament_id) DO UPDATE SET status = 'started'""",
+        (tournament_id,),
+    )
+
+
+@bp.route("/knockout", methods=["GET", "POST"])
+@login_required
+@tournament_required
+def knockout():
+    from routes.public import compute_board, knockout_teams
+
+    db = get_db()
+    tournament_id = g.tournament["id"]
+    board = compute_board(db, tournament_id)
+
+    if request.method == "POST":
+        if session.get("is_superuser"):
+            flash("Only an admin can open or reset the knockout round.", "error")
+            return redirect(url_for("admin.knockout"))
+
+        action = request.form.get("action")
+
+        if action == "complete":
+            if len(board) < KNOCKOUT_SIZE:
+                flash(f"The knockout round needs at least {KNOCKOUT_SIZE} players.", "error")
+            elif _knockout_has_cutoff_tie(board):
+                db.execute(
+                    """INSERT INTO knockout_state (tournament_id, status) VALUES (?, 'selecting')
+                       ON CONFLICT(tournament_id) DO UPDATE SET status = 'selecting'""",
+                    (tournament_id,),
+                )
+                db.commit()
+                flash("Players are tied on points at the top-8 cut-off. Choose the 8 players below.", "error")
+            else:
+                _start_knockout(db, tournament_id, [row["name"] for row in board[:KNOCKOUT_SIZE]])
+                db.commit()
+                flash("All matches marked complete. The Knockout tab is now open.", "success")
+
+        elif action == "select":
+            pool = [row["name"] for row in board[:KNOCKOUT_PICK_POOL]]
+            chosen = set(request.form.getlist("player"))
+            if not chosen.issubset(pool) or len(chosen) != KNOCKOUT_SIZE:
+                flash(f"Select exactly {KNOCKOUT_SIZE} players (you selected {len(chosen)}).", "error")
+            else:
+                _start_knockout(db, tournament_id, [name for name in pool if name in chosen])
+                db.commit()
+                flash("Top 8 confirmed. The Knockout tab is now open.", "success")
+
+        elif action == "reset":
+            db.execute("DELETE FROM knockout_matches WHERE tournament_id = ?", (tournament_id,))
+            db.execute("DELETE FROM knockout_seeds WHERE tournament_id = ?", (tournament_id,))
+            db.execute("DELETE FROM knockout_state WHERE tournament_id = ?", (tournament_id,))
+            db.commit()
+            flash("Knockout round reset. The public Knockout tab is hidden again.", "success")
+
+        return redirect(url_for("admin.knockout"))
+
+    state = db.execute("SELECT status FROM knockout_state WHERE tournament_id = ?", (tournament_id,)).fetchone()
+    status = state["status"] if state else None
+
+    unscored = db.execute(
+        """SELECT COUNT(*) AS n FROM matches
+           JOIN courts ON courts.id = matches.court_id
+           WHERE courts.tournament_id = ?
+             AND (matches.team1_score IS NULL OR matches.team2_score IS NULL)""",
+        (tournament_id,),
+    ).fetchone()["n"]
+
+    pool = []
+    if status == "selecting":
+        cutoff_score = board[KNOCKOUT_SIZE - 1]["total_score"] if len(board) >= KNOCKOUT_SIZE else None
+        for rank, row in enumerate(board[:KNOCKOUT_PICK_POOL], start=1):
+            pool.append(
+                {
+                    "rank": rank,
+                    "name": row["name"],
+                    "total_score": row["total_score"],
+                    "point_difference": row["point_difference"],
+                    "tied": row["total_score"] == cutoff_score,
+                    # Players clearly above the tied group are pre-selected.
+                    "preselected": cutoff_score is not None and row["total_score"] > cutoff_score,
+                }
+            )
+
+    seeds = []
+    teams = {}
+    if status == "started":
+        seeds = db.execute(
+            "SELECT seed, player_name FROM knockout_seeds WHERE tournament_id = ? ORDER BY seed", (tournament_id,)
+        ).fetchall()
+        teams = knockout_teams(db, tournament_id)
+
+    return render_template(
+        "admin/knockout.html",
+        tournament=g.tournament,
+        status=status,
+        unscored=unscored,
+        pool=pool,
+        seeds=seeds,
+        teams=teams,
+        knockout_size=KNOCKOUT_SIZE,
+    )

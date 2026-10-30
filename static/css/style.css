@@ -300,6 +300,46 @@ th { background: var(--color-blue); color: #fff; }
   margin-top: 1rem;
 }
 
+.knockout-round-1 { background: #fbdfe3; }
+.knockout-round-2 { background: #e6dcf5; }
+.knockout-warning { color: #b00020; font-weight: 600; }
+.knockout-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.knockout-pick-input { position: absolute; opacity: 0; pointer-events: none; }
+.knockout-pick-button {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+}
+.knockout-pick-button:hover { border-color: var(--color-yellow-dark); }
+.knockout-pick-input:checked + .knockout-pick-button {
+  background: var(--color-yellow);
+  border-color: var(--color-yellow-dark);
+  font-weight: 700;
+}
+.knockout-pick-input:focus-visible + .knockout-pick-button { outline: 2px solid var(--color-blue); }
+.knockout-pick-rank { color: var(--color-blue-dark); font-weight: 700; }
+.knockout-pick-score { width: 100%; font-size: 0.85rem; color: #555; }
+.knockout-tie-tag {
+  background: #b00020;
+  color: #fff;
+  border-radius: 3px;
+  padding: 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .theme-banner-preview {
   height: 40px;
   width: 70px;

@@ -11,6 +11,9 @@ SLAM_ROUND_LABELS = {1: "Round 1", 2: "Round 2", 3: "Round 3", 4: "Semifinals", 
 
 AWARD_CATEGORIES = {"best_dressed": "Best Dressed", "spirit_of_the_haunt": "Spirit of the Haunt"}
 
+KNOCKOUT_ROUND_SLOTS = {1: 2, 2: 1}
+KNOCKOUT_ROUND_LABELS = {1: "Semifinals", 2: "Final"}
+
 
 @bp.app_context_processor
 def inject_started_award_categories():
@@ -25,6 +28,18 @@ def inject_started_award_categories():
         "SELECT category FROM award_rounds WHERE tournament_id = ? AND started = 1", (tournament_id,)
     ).fetchall()
     return {"started_award_categories": {row["category"] for row in rows}}
+
+
+@bp.app_context_processor
+def inject_knockout_open():
+    """Lets base.html show the Knockout nav link only once the admin has opened the knockout round."""
+    tournament_id = (request.view_args or {}).get("tournament_id") or session.get("tournament_id")
+    if not tournament_id:
+        return {"knockout_open": False}
+    row = get_db().execute(
+        "SELECT 1 FROM knockout_state WHERE tournament_id = ? AND status = 'started'", (tournament_id,)
+    ).fetchone()
+    return {"knockout_open": row is not None}
 
 
 def _pick_server(player1_name, player2_name):
@@ -105,6 +120,12 @@ def submit_score(tournament_id, match_id):
 def rankings(tournament_id):
     db = get_db()
     tournament = _get_tournament(db, tournament_id)
+    board = compute_board(db, tournament_id)
+    return render_template("public/rankings.html", tournament=tournament, board=board)
+
+
+def compute_board(db, tournament_id):
+    """Players ranked by total score, then point difference, then name."""
     matches = db.execute(
         """SELECT matches.team1_player1_id, matches.team1_player2_id,
                   matches.team2_player1_id, matches.team2_player2_id,
@@ -147,7 +168,7 @@ def rankings(tournament_id):
         for p in all_players
     ]
     board.sort(key=lambda row: (-row["total_score"], -row["point_difference"], row["name"]))
-    return render_template("public/rankings.html", tournament=tournament, board=board)
+    return board
 
 
 @bp.route("/t/<int:tournament_id>/schedule")
@@ -466,3 +487,91 @@ def awards_vote(tournament_id, category):
     db.commit()
     flash("Your vote has been recorded. Thank you!", "success")
     return redirect(url_for("public.awards", tournament_id=tournament_id, category=category, voter_id=voter_id))
+
+
+# ---------- Knockout round ----------
+
+def knockout_teams(db, tournament_id):
+    """{team_number: (seed_a_name, seed_b_name)} with team k = seed k + seed 9-k."""
+    seeds = {
+        row["seed"]: row["player_name"]
+        for row in db.execute(
+            "SELECT seed, player_name FROM knockout_seeds WHERE tournament_id = ?", (tournament_id,)
+        ).fetchall()
+    }
+    return {k: (seeds.get(k), seeds.get(9 - k)) for k in range(1, 5)}
+
+
+@bp.route("/t/<int:tournament_id>/knockout")
+def knockout(tournament_id):
+    db = get_db()
+    tournament = _get_tournament(db, tournament_id)
+    state = db.execute("SELECT status FROM knockout_state WHERE tournament_id = ?", (tournament_id,)).fetchone()
+    if state is None or state["status"] != "started":
+        abort(404)
+
+    teams = knockout_teams(db, tournament_id)
+    rows = db.execute(
+        "SELECT * FROM knockout_matches WHERE tournament_id = ? ORDER BY round, slot", (tournament_id,)
+    ).fetchall()
+    by_round = {}
+    for row in rows:
+        by_round.setdefault(row["round"], {})[row["slot"]] = row
+
+    rounds = []
+    for round_num, slot_count in KNOCKOUT_ROUND_SLOTS.items():
+        slots = [by_round.get(round_num, {}).get(slot) for slot in range(slot_count)]
+        rounds.append({"number": round_num, "label": KNOCKOUT_ROUND_LABELS[round_num], "slots": slots})
+
+    final_match = by_round.get(2, {}).get(0)
+    champion = teams[final_match["winner"]] if final_match is not None and final_match["winner"] else None
+
+    seeds = db.execute(
+        "SELECT seed, player_name FROM knockout_seeds WHERE tournament_id = ? ORDER BY seed", (tournament_id,)
+    ).fetchall()
+    return render_template(
+        "public/knockout.html",
+        tournament=tournament,
+        teams=teams,
+        seeds=seeds,
+        rounds=rounds,
+        champion=champion,
+    )
+
+
+@bp.route("/t/<int:tournament_id>/knockout/pick", methods=["POST"])
+def knockout_pick(tournament_id):
+    db = get_db()
+    _get_tournament(db, tournament_id)
+
+    if not session.get("is_admin"):
+        abort(403)
+
+    round_num = request.form.get("round", type=int)
+    slot = request.form.get("slot", type=int)
+    winner = request.form.get("winner", type=int)
+
+    if round_num not in KNOCKOUT_ROUND_SLOTS or slot is None or not (0 <= slot < KNOCKOUT_ROUND_SLOTS[round_num]):
+        abort(400)
+
+    match = db.execute(
+        "SELECT * FROM knockout_matches WHERE tournament_id = ? AND round = ? AND slot = ?",
+        (tournament_id, round_num, slot),
+    ).fetchone()
+    if match is None or match["winner"] is not None or winner is None or winner not in (match["team1"], match["team2"]):
+        abort(400)
+
+    db.execute("UPDATE knockout_matches SET winner = ? WHERE id = ?", (winner, match["id"]))
+
+    if round_num == 1:
+        db.execute(
+            """INSERT INTO knockout_matches (tournament_id, round, slot, team1, team2)
+               VALUES (?, 2, 0, ?, ?)
+               ON CONFLICT(tournament_id, round, slot) DO UPDATE SET
+                 team1 = COALESCE(knockout_matches.team1, excluded.team1),
+                 team2 = COALESCE(knockout_matches.team2, excluded.team2)""",
+            (tournament_id, winner if slot == 0 else None, winner if slot == 1 else None),
+        )
+
+    db.commit()
+    return redirect(url_for("public.knockout", tournament_id=tournament_id))

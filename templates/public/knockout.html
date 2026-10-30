@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% macro team_label(team) %}{% set pair = teams[team] %}{{ pair[0] }} &amp; {{ pair[1] }}{% endmacro %}
+{% macro team_row(round_number, slot, match, which) %}
+  {% set team = (match.team1 if which == 1 else match.team2) if match else None %}
+  {% if not team %}
+    <div class="slam-player slam-player-tbd">TBD</div>
+  {% elif match.winner %}
+    <div class="slam-player {{ 'slam-player-winner' if match.winner == team else 'slam-player-loser' }}">{{ team_label(team) }}</div>
+  {% elif session.get('is_admin') and match.team1 and match.team2 %}
+    <form method="post" action="{{ url_for('public.knockout_pick', tournament_id=tournament.id) }}" class="slam-pick-form">
+      <input type="hidden" name="round" value="{{ round_number }}">
+      <input type="hidden" name="slot" value="{{ slot }}">
+      <button type="submit" name="winner" value="{{ team }}" class="slam-player-button">{{ team_label(team) }}</button>
+    </form>
+  {% else %}
+    <div class="slam-player">{{ team_label(team) }}</div>
+  {% endif %}
+{% endmacro %}
+{% block content %}
+<div class="slam-banner">
+  <h1>Knockout Round</h1>
+  <p>{{ tournament.name }} &middot; top 8 &middot; pairs 1+8, 2+7, 3+6, 4+5</p>
+</div>
+
+<div class="slam-bracket">
+  {% for round in rounds %}
+  <div class="slam-round knockout-round-{{ round.number }}">
+    <h3>{{ round.label }}</h3>
+    {% for match in round.slots %}
+      <div class="slam-match">
+        {{ team_row(round.number, loop.index0, match, 1) }}
+        {{ team_row(round.number, loop.index0, match, 2) }}
+      </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <div class="slam-round slam-champion-col">
+    <h3>Champions</h3>
+    <div class="slam-champion-box">{% if champion %}{{ champion[0] }} &amp; {{ champion[1] }}{% else %}TBD{% endif %}</div>
+  </div>
+</div>
+
+<h2>Seeds</h2>
+<div class="table-responsive">
+<table>
+  <thead><tr><th>Seed</th><th>Player</th><th>Pair</th></tr></thead>
+  <tbody>
+    {% for s in seeds %}
+      {% set k = s.seed if s.seed <= 4 else 9 - s.seed %}
+      <tr><td>{{ s.seed }}</td><td>{{ s.player_name }}</td><td>Pair {{ k }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

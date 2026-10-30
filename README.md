@@ -56,6 +56,8 @@ $env:SUPERUSER2_PASSWORD = "strong-password-2"
 - `/admin/courts` — set the number of courts in the active tournament
 - `/admin/matches` — for each court, assign up to 5 matches (two pairs of players each)
 - `/admin/randomizer` — generate matches across all courts (choose matches per player, add up to 5 "don't pair" exceptions); this replaces any existing matches/scores in the active tournament
+- `/admin/knockout` — press **All Matches Complete** to open the knockout round. The top 8 on the rankings are paired 1+8, 2+7, 3+6, 4+5. If players are tied on points at the 8th/9th place cut-off, the admin clicks to choose 8 players from the top 16 first. **Reset Knockout** hides the tab again
+- `/t/<id>/knockout` — public bracket (semifinals and final, pairs stay the same), shown in the menu only after the admin opens it; admins and superusers click the winning pair
 - `/` — public page listing all tournaments
 - `/t/<id>/scoring` — public page, one tab per court, enter each match's score
 - `/t/<id>/rankings` — public page, players ranked by total score
