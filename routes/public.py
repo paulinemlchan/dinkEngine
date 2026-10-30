@@ -10,6 +10,8 @@ SLAM_ROUND_SLOTS = {1: 16, 2: 8, 3: 4, 4: 2, 5: 1}
 SLAM_ROUND_LABELS = {1: "Round 1", 2: "Round 2", 3: "Round 3", 4: "Semifinals", 5: "Final"}
 
 AWARD_CATEGORIES = {"best_dressed": "Best Dressed", "spirit_of_the_haunt": "Spirit of the Haunt"}
+WRITE_IN_CHOICE = "write_in"
+WRITE_IN_MAX_LENGTH = 60
 
 KNOCKOUT_ROUND_SLOTS = {1: 2, 2: 1}
 KNOCKOUT_ROUND_LABELS = {1: "Semifinals", 2: "Final"}
@@ -424,8 +426,8 @@ def awards(tournament_id, category):
         ).fetchone()
         if voter is not None:
             existing_vote = db.execute(
-                """SELECT players.name FROM award_votes
-                   JOIN players ON players.id = award_votes.nominee_player_id
+                """SELECT COALESCE(players.name, award_votes.nominee_name) AS name FROM award_votes
+                   LEFT JOIN players ON players.id = award_votes.nominee_player_id
                    WHERE award_votes.tournament_id = ? AND award_votes.category = ? AND award_votes.voter_player_id = ?""",
                 (tournament_id, category, voter_id),
             ).fetchone()
@@ -462,14 +464,45 @@ def awards_vote(tournament_id, category):
         abort(400)
 
     voter_id = request.form.get("voter_id", type=int)
-    nominee_id = request.form.get("nominee_id", type=int)
-    if voter_id is None or nominee_id is None or voter_id == nominee_id:
+    if voter_id is None:
         abort(400)
+    voter = db.execute(
+        "SELECT id, name FROM players WHERE id = ? AND tournament_id = ?", (voter_id, tournament_id)
+    ).fetchone()
+    if voter is None:
+        abort(400)
+    back = redirect(url_for("public.awards", tournament_id=tournament_id, category=category, voter_id=voter_id))
 
-    voter = db.execute("SELECT id FROM players WHERE id = ? AND tournament_id = ?", (voter_id, tournament_id)).fetchone()
-    nominee = db.execute("SELECT id FROM players WHERE id = ? AND tournament_id = ?", (nominee_id, tournament_id)).fetchone()
-    if voter is None or nominee is None:
-        abort(400)
+    nominee_name = None
+    if request.form.get("nominee_id") == WRITE_IN_CHOICE:
+        typed = " ".join(request.form.get("nominee_name", "").split())
+        if not typed:
+            flash("Type a name to nominate, or pick a player from the list.", "error")
+            return back
+        if len(typed) > WRITE_IN_MAX_LENGTH:
+            flash(f"A nominated name can be at most {WRITE_IN_MAX_LENGTH} characters.", "error")
+            return back
+        # A typed name that matches a player counts as a vote for that player.
+        match = db.execute(
+            "SELECT id FROM players WHERE tournament_id = ? AND LOWER(name) = LOWER(?)", (tournament_id, typed)
+        ).fetchone()
+        if match is not None:
+            nominee_id = match["id"]
+        else:
+            nominee_id, nominee_name = None, typed
+    else:
+        nominee_id = request.form.get("nominee_id", type=int)
+        if nominee_id is None:
+            abort(400)
+        nominee = db.execute(
+            "SELECT id FROM players WHERE id = ? AND tournament_id = ?", (nominee_id, tournament_id)
+        ).fetchone()
+        if nominee is None:
+            abort(400)
+
+    if nominee_id == voter_id:
+        flash("You can't vote for yourself.", "error")
+        return back
 
     already_voted = db.execute(
         "SELECT 1 FROM award_votes WHERE tournament_id = ? AND category = ? AND voter_player_id = ?",
@@ -480,9 +513,9 @@ def awards_vote(tournament_id, category):
         return redirect(url_for("public.awards", tournament_id=tournament_id, category=category, voter_id=voter_id))
 
     db.execute(
-        """INSERT INTO award_votes (tournament_id, category, voter_player_id, nominee_player_id)
-           VALUES (?, ?, ?, ?)""",
-        (tournament_id, category, voter_id, nominee_id),
+        """INSERT INTO award_votes (tournament_id, category, voter_player_id, nominee_player_id, nominee_name)
+           VALUES (?, ?, ?, ?, ?)""",
+        (tournament_id, category, voter_id, nominee_id, nominee_name),
     )
     db.commit()
     flash("Your vote has been recorded. Thank you!", "success")

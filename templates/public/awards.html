@@ -38,6 +38,12 @@
           <label><input type="radio" name="nominee_id" value="{{ p.id }}" required> {{ p.name }}</label>
         </li>
       {% endfor %}
+      <li class="write-in-option">
+        <label for="write-in-radio"><input type="radio" id="write-in-radio" name="nominee_id" value="write_in" required> Nominate a name:</label>
+        <input type="text" name="nominee_name" maxlength="60" aria-label="Nominate a name"
+               onfocus="document.getElementById('write-in-radio').checked = true;"
+               oninput="document.getElementById('write-in-radio').checked = true;">
+      </li>
     </ul>
     <button type="submit">Submit vote</button>
   </form>

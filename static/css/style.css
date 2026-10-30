@@ -86,6 +86,8 @@ h2 { color: var(--color-blue-dark); }
 .awards-header h1 { margin-bottom: 0.25rem; }
 .awards-badge { height: 96px; width: 96px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .awards-description { margin: 0; font-style: italic; color: var(--color-navy-text); }
+.write-in-option { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.write-in-option input[type="text"] { flex: 1 1 12rem; max-width: 20rem; }
 .admin-tabs {
   display: flex;
   gap: 0.75rem;

@@ -639,12 +639,12 @@ def awards():
             "SELECT started FROM award_rounds WHERE tournament_id = ? AND category = ?", (tournament_id, category)
         ).fetchone()
         results = db.execute(
-            """SELECT players.name AS name, COUNT(*) AS points
+            """SELECT MIN(COALESCE(players.name, award_votes.nominee_name)) AS name, COUNT(*) AS points
                FROM award_votes
-               JOIN players ON players.id = award_votes.nominee_player_id
+               LEFT JOIN players ON players.id = award_votes.nominee_player_id
                WHERE award_votes.tournament_id = ? AND award_votes.category = ?
-               GROUP BY players.id
-               ORDER BY points DESC, players.name""",
+               GROUP BY COALESCE('p' || players.id, 'w' || LOWER(award_votes.nominee_name))
+               ORDER BY points DESC, name""",
             (tournament_id, category),
         ).fetchall()
         categories.append(

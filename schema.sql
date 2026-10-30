@@ -70,7 +70,9 @@ CREATE TABLE IF NOT EXISTS award_votes (
     tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
     category TEXT NOT NULL,
     voter_player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-    nominee_player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+    nominee_player_id INTEGER REFERENCES players(id) ON DELETE CASCADE,
+    -- Set instead of nominee_player_id when the voter typed a name that is not a player.
+    nominee_name TEXT,
     UNIQUE(tournament_id, category, voter_player_id)
 );
 

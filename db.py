@@ -46,6 +46,28 @@ def _migrate(db):
     if "server_name" not in slam_columns:
         db.execute("ALTER TABLE slam_matches ADD COLUMN server_name TEXT")
 
+    vote_columns = {row["name"] for row in db.execute("PRAGMA table_info(award_votes)")}
+    if "nominee_name" not in vote_columns:
+        # Write-in nominees need nominee_player_id to allow NULL; SQLite can only change
+        # that by rebuilding the table, so copy the existing votes into a new one.
+        db.execute(
+            """CREATE TABLE award_votes_new (
+                   id INTEGER PRIMARY KEY AUTOINCREMENT,
+                   tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+                   category TEXT NOT NULL,
+                   voter_player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+                   nominee_player_id INTEGER REFERENCES players(id) ON DELETE CASCADE,
+                   nominee_name TEXT,
+                   UNIQUE(tournament_id, category, voter_player_id)
+               )"""
+        )
+        db.execute(
+            """INSERT INTO award_votes_new (id, tournament_id, category, voter_player_id, nominee_player_id)
+               SELECT id, tournament_id, category, voter_player_id, nominee_player_id FROM award_votes"""
+        )
+        db.execute("DROP TABLE award_votes")
+        db.execute("ALTER TABLE award_votes_new RENAME TO award_votes")
+
 
 @click.command("init-db")
 def init_db_command():
