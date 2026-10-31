@@ -18,13 +18,13 @@
   {% endif %}
 {% elif not voter %}
   <form method="get" class="inline-form">
-    <select name="voter_id" required>
+    <select name="voter_id" required onchange="if (this.value) this.form.submit();">
       <option value="">-- select your name --</option>
       {% for p in players %}
         <option value="{{ p.id }}">{{ p.name }}</option>
       {% endfor %}
     </select>
-    <button type="submit">Continue</button>
+    <noscript><button type="submit">Continue</button></noscript>
   </form>
 {% elif already_voted_for %}
   <p>Thanks, {{ voter.name }} &mdash; you've already voted for <strong>{{ already_voted_for }}</strong> in this category.</p>

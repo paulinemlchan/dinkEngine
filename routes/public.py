@@ -209,7 +209,7 @@ def report(tournament_id):
     db = get_db()
     tournament = _get_tournament(db, tournament_id)
     all_players = db.execute(
-        "SELECT * FROM players WHERE tournament_id = ? ORDER BY name", (tournament_id,)
+        "SELECT * FROM players WHERE tournament_id = ? ORDER BY name COLLATE NOCASE", (tournament_id,)
     ).fetchall()
 
     selected_player = None
@@ -405,7 +405,7 @@ def awards(tournament_id, category):
     started = bool(round_row and round_row["started"])
 
     all_players = db.execute(
-        "SELECT * FROM players WHERE tournament_id = ? ORDER BY name", (tournament_id,)
+        "SELECT * FROM players WHERE tournament_id = ? ORDER BY name COLLATE NOCASE", (tournament_id,)
     ).fetchall()
     voted_ids = {
         row["voter_player_id"]

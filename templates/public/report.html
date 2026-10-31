@@ -3,13 +3,13 @@
 <h1>My Matches &ndash; {{ tournament.name }}</h1>
 
 <form method="get" class="inline-form">
-  <select name="player_id" required>
+  <select name="player_id" required onchange="if (this.value) this.form.submit();">
     <option value="">-- select your name --</option>
     {% for p in players %}
       <option value="{{ p.id }}" {% if selected_player and selected_player.id == p.id %}selected{% endif %}>{{ p.name }}</option>
     {% endfor %}
   </select>
-  <button type="submit">Show my matches</button>
+  <noscript><button type="submit">Show my matches</button></noscript>
 </form>
 
 {% if selected_player %}
