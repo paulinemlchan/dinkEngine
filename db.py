@@ -1,7 +1,15 @@
 import sqlite3
+import unicodedata
 
 import click
 from flask import current_app, g
+
+
+def clean_name(name):
+    """Remove invisible characters (such as U+2060 from copy-paste) and extra spaces from a name."""
+    name = unicodedata.normalize("NFC", name or "")
+    name = "".join(ch for ch in name if unicodedata.category(ch) not in ("Cf", "Cc"))
+    return " ".join(name.split())
 
 
 def get_db():
@@ -67,6 +75,28 @@ def _migrate(db):
         )
         db.execute("DROP TABLE award_votes")
         db.execute("ALTER TABLE award_votes_new RENAME TO award_votes")
+
+    _clean_player_names(db)
+
+
+def _clean_player_names(db):
+    """Clean names saved before clean_name() existed. A name is left as-is if the cleaned
+    name already belongs to another player in the same tournament."""
+    for row in db.execute("SELECT id, tournament_id, name FROM players").fetchall():
+        cleaned = clean_name(row["name"])
+        if not cleaned or cleaned == row["name"]:
+            continue
+        clash = db.execute(
+            "SELECT 1 FROM players WHERE tournament_id = ? AND name = ? AND id != ?",
+            (row["tournament_id"], cleaned, row["id"]),
+        ).fetchone()
+        if clash is None:
+            db.execute("UPDATE players SET name = ? WHERE id = ?", (cleaned, row["id"]))
+
+    for row in db.execute("SELECT id, nominee_name FROM award_votes WHERE nominee_name IS NOT NULL").fetchall():
+        cleaned = clean_name(row["nominee_name"])
+        if cleaned and cleaned != row["nominee_name"]:
+            db.execute("UPDATE award_votes SET nominee_name = ? WHERE id = ?", (cleaned, row["id"]))
 
 
 @click.command("init-db")

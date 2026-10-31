@@ -5,7 +5,7 @@ from functools import wraps
 from flask import Blueprint, current_app, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.utils import secure_filename
 
-from db import get_db
+from db import clean_name, get_db
 from randomizer import generate_match_schedule
 from routes.auth import login_required
 
@@ -195,7 +195,7 @@ def players():
             candidates = []
             seen = set()
             for line in raw.replace(",", "\n").splitlines():
-                name = line.strip()
+                name = clean_name(line)
                 if name and name not in seen:
                     seen.add(name)
                     candidates.append(name)
@@ -223,7 +223,7 @@ def players():
                         "error",
                     )
         else:
-            name = request.form.get("name", "").strip()
+            name = clean_name(request.form.get("name", ""))
             is_kid = 1 if request.form.get("is_kid") else 0
             if not name:
                 flash("Player name cannot be empty.", "error")
@@ -644,7 +644,7 @@ def awards():
                LEFT JOIN players ON players.id = award_votes.nominee_player_id
                WHERE award_votes.tournament_id = ? AND award_votes.category = ?
                GROUP BY COALESCE('p' || players.id, 'w' || LOWER(award_votes.nominee_name))
-               ORDER BY points DESC, name""",
+               ORDER BY points DESC, name COLLATE NOCASE""",
             (tournament_id, category),
         ).fetchall()
         categories.append(

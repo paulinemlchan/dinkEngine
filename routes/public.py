@@ -2,7 +2,7 @@ import random
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 
-from db import get_db
+from db import clean_name, get_db
 
 bp = Blueprint("public", __name__)
 
@@ -475,7 +475,7 @@ def awards_vote(tournament_id, category):
 
     nominee_name = None
     if request.form.get("nominee_id") == WRITE_IN_CHOICE:
-        typed = " ".join(request.form.get("nominee_name", "").split())
+        typed = clean_name(request.form.get("nominee_name", ""))
         if not typed:
             flash("Type a name to nominate, or pick a player from the list.", "error")
             return back
