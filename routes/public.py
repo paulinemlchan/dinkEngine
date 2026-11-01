@@ -51,6 +51,28 @@ def _pick_server(player1_name, player2_name):
     return random.choice([player1_name, player2_name])
 
 
+def _slam_round1_pairs(names):
+    """Shuffle players into the 16 Round 1 matches with BYEs on random matches.
+
+    A BYE only meets another BYE when there are fewer than 16 players, since
+    then some matches cannot get a player at all.
+    """
+    names = list(names)
+    random.shuffle(names)
+    full = max(0, len(names) - 16)        # matches with two players
+    solo = len(names) - 2 * full          # matches with one player and a BYE
+    empty = 16 - full - solo              # BYE vs BYE
+    kinds = [2] * full + [1] * solo + [0] * empty
+    random.shuffle(kinds)
+
+    pairs = []
+    for kind in kinds:
+        pair = [names.pop() if i < kind else "BYE" for i in range(2)]
+        random.shuffle(pair)
+        pairs.append(tuple(pair))
+    return pairs
+
+
 def _get_tournament(db, tournament_id):
     tournament = db.execute("SELECT * FROM tournaments WHERE id = ?", (tournament_id,)).fetchone()
     if tournament is None:
@@ -322,12 +344,8 @@ def slam_start(tournament_id):
         flash("A 1-Point Slam bracket supports at most 32 players.", "error")
         return redirect(url_for("public.slam", tournament_id=tournament_id))
 
-    random.shuffle(names)
-    names += ["BYE"] * (32 - len(names))
-
     db.execute("DELETE FROM slam_matches WHERE tournament_id = ?", (tournament_id,))
-    for slot in range(16):
-        player1_name, player2_name = names[slot * 2], names[slot * 2 + 1]
+    for slot, (player1_name, player2_name) in enumerate(_slam_round1_pairs(names)):
         db.execute(
             """INSERT INTO slam_matches (tournament_id, round, slot, player1_name, player2_name, server_name)
                VALUES (?, 1, ?, ?, ?, ?)""",
