@@ -26,17 +26,21 @@
   {% for round in rounds %}
   <div class="slam-round knockout-round-{{ round.number }}">
     <h3>{{ round.label }}</h3>
+    <div class="slam-round-matches">
     {% for match in round.slots %}
       <div class="slam-match">
         {{ team_row(round.number, loop.index0, match, 1) }}
         {{ team_row(round.number, loop.index0, match, 2) }}
       </div>
     {% endfor %}
+    </div>
   </div>
   {% endfor %}
   <div class="slam-round slam-champion-col">
     <h3>Champions</h3>
-    <div class="slam-champion-box">{% if champion %}{{ champion[0] }} &amp; {{ champion[1] }}{% else %}TBD{% endif %}</div>
+    <div class="slam-round-matches">
+      <div class="slam-champion-box">{% if champion %}{{ champion[0] }} &amp; {{ champion[1] }}{% else %}TBD{% endif %}</div>
+    </div>
   </div>
 </div>
 

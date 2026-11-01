@@ -253,17 +253,22 @@ th { background: var(--color-blue); color: #fff; }
   min-width: 170px;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   padding: 0.5rem;
   border-radius: 6px;
 }
 .slam-round h3 { text-align: center; color: var(--color-blue-dark); margin-top: 0; }
+.slam-round-matches {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
 .slam-round-1 { background: #dceefb; }
 .slam-round-2 { background: #ddf3e4; }
 .slam-round-3 { background: #fbf3d2; }
 .slam-round-4 { background: #fbdfe3; }
 .slam-round-5 { background: #e6dcf5; }
-.slam-champion-col { background: none; justify-content: flex-start; }
+.slam-champion-col { background: #fff6cc; }
 .slam-match {
   background: #fff;
   border: 1px solid #ddd;
@@ -299,7 +304,7 @@ th { background: var(--color-blue); color: #fff; }
   text-align: center;
   font-weight: 800;
   font-size: 1.1rem;
-  margin-top: 1rem;
+  margin: 0.4rem 0;
 }
 
 .knockout-round-1 { background: #fbdfe3; }
