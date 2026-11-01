@@ -312,12 +312,15 @@ def slam(tournament_id):
     if final_match is not None:
         champion = final_match["winner_name"]
 
+    last_pick = _last_slam_pick(db, tournament_id)
     return render_template(
         "public/slam.html",
         tournament=tournament,
         rounds=rounds,
         started=1 in by_round,
         champion=champion,
+        last_pick=last_pick,
+        last_pick_round=SLAM_ROUND_LABELS[last_pick["round"]] if last_pick else None,
     )
 
 
@@ -377,7 +380,12 @@ def slam_pick(tournament_id):
     if match is None or winner not in (match["player1_name"], match["player2_name"]):
         abort(400)
 
-    db.execute("UPDATE slam_matches SET winner_name = ? WHERE id = ?", (winner, match["id"]))
+    db.execute(
+        """UPDATE slam_matches SET winner_name = ?,
+             pick_seq = (SELECT COALESCE(MAX(pick_seq), 0) + 1 FROM slam_matches WHERE tournament_id = ?)
+           WHERE id = ?""",
+        (winner, tournament_id, match["id"]),
+    )
 
     if round_num < 5:
         next_slot = slot // 2
@@ -406,6 +414,54 @@ def slam_pick(tournament_id):
                 db.execute("UPDATE slam_matches SET server_name = ? WHERE id = ?", (server_name, next_match["id"]))
 
     db.commit()
+    return redirect(url_for("public.slam", tournament_id=tournament_id))
+
+
+def _last_slam_pick(db, tournament_id):
+    """The most recent winner pick, or None. Picks made before pick_seq existed are not tracked."""
+    return db.execute(
+        """SELECT * FROM slam_matches
+           WHERE tournament_id = ? AND winner_name IS NOT NULL AND pick_seq IS NOT NULL
+           ORDER BY pick_seq DESC LIMIT 1""",
+        (tournament_id,),
+    ).fetchone()
+
+
+@bp.route("/t/<int:tournament_id>/slam/undo", methods=["POST"])
+def slam_undo(tournament_id):
+    db = get_db()
+    _get_tournament(db, tournament_id)
+
+    if not session.get("is_admin"):
+        abort(403)
+
+    last = _last_slam_pick(db, tournament_id)
+    if last is None:
+        flash("There is no pick to undo.", "error")
+        return redirect(url_for("public.slam", tournament_id=tournament_id))
+
+    if last["round"] < 5:
+        next_match = db.execute(
+            "SELECT * FROM slam_matches WHERE tournament_id = ? AND round = ? AND slot = ?",
+            (tournament_id, last["round"] + 1, last["slot"] // 2),
+        ).fetchone()
+        if next_match is not None:
+            if next_match["winner_name"] is not None:
+                flash("That pick can't be undone because the next round already has a winner.", "error")
+                return redirect(url_for("public.slam", tournament_id=tournament_id))
+            # The winner moved into this side of the next match; take them out and drop its server.
+            side = "player1_name" if last["slot"] % 2 == 0 else "player2_name"
+            other = "player2_name" if side == "player1_name" else "player1_name"
+            if next_match[other] is None:
+                db.execute("DELETE FROM slam_matches WHERE id = ?", (next_match["id"],))
+            else:
+                db.execute(
+                    f"UPDATE slam_matches SET {side} = NULL, server_name = NULL WHERE id = ?", (next_match["id"],)
+                )
+
+    db.execute("UPDATE slam_matches SET winner_name = NULL, pick_seq = NULL WHERE id = ?", (last["id"],))
+    db.commit()
+    flash(f"Undid the pick of {last['winner_name']} in {SLAM_ROUND_LABELS[last['round']]}.", "success")
     return redirect(url_for("public.slam", tournament_id=tournament_id))
 
 

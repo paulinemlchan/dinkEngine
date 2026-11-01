@@ -27,6 +27,12 @@
   <button type="submit">{{ 'Restart Bracket' if started else 'Start' }}</button>
 </form>
 {% endif %}
+{% if started and last_pick and session.get('is_admin') %}
+<form method="post" action="{{ url_for('public.slam_undo', tournament_id=tournament.id) }}" class="inline-form"
+      onsubmit='return confirm({{ ("Undo the pick of " ~ last_pick.winner_name ~ " in " ~ last_pick_round ~ "?")|tojson }});'>
+  <button type="submit">Undo last pick ({{ last_pick.winner_name }}, {{ last_pick_round }})</button>
+</form>
+{% endif %}
 
 {% if started %}
 <div class="slam-bracket">

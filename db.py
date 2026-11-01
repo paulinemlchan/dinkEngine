@@ -53,6 +53,8 @@ def _migrate(db):
     slam_columns = {row["name"] for row in db.execute("PRAGMA table_info(slam_matches)")}
     if "server_name" not in slam_columns:
         db.execute("ALTER TABLE slam_matches ADD COLUMN server_name TEXT")
+    if "pick_seq" not in slam_columns:
+        db.execute("ALTER TABLE slam_matches ADD COLUMN pick_seq INTEGER")
 
     vote_columns = {row["name"] for row in db.execute("PRAGMA table_info(award_votes)")}
     if "nominee_name" not in vote_columns:

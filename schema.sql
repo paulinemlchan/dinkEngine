@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS slam_matches (
     player2_name TEXT,
     winner_name TEXT,
     server_name TEXT,
+    -- Order in which winners were picked, so the last pick can be undone.
+    pick_seq INTEGER,
     UNIQUE(tournament_id, round, slot)
 );
 
