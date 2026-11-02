@@ -90,10 +90,13 @@ def tournaments():
 
         if action == "create":
             name = request.form.get("name", "").strip()
+            play_type = request.form.get("play_type", "single")
             if not name:
                 flash("Tournament name cannot be empty.", "error")
+            elif play_type not in current_app.config["PLAY_TYPES"]:
+                flash("Choose a tournament type.", "error")
             else:
-                cur = db.execute("INSERT INTO tournaments (name) VALUES (?)", (name,))
+                cur = db.execute("INSERT INTO tournaments (name, play_type) VALUES (?, ?)", (name, play_type))
                 db.commit()
                 session["tournament_id"] = cur.lastrowid
                 flash(f"Tournament '{name}' created and selected.", "success")
@@ -462,6 +465,9 @@ def randomizer():
     if session.get("is_superuser"):
         flash("Superusers cannot access the Randomizer.", "error")
         return redirect(url_for("admin.tournaments"))
+    if g.tournament["play_type"] != "single":
+        flash("The Randomizer is only for Random Single Play tournaments.", "error")
+        return redirect(url_for("admin.players"))
 
     db = get_db()
     tournament_id = g.tournament["id"]

@@ -3,10 +3,10 @@
   <a href="{{ url_for('admin.players') }}">Players</a>
   <a href="{{ url_for('admin.courts') }}">Courts</a>
   <a href="{{ url_for('admin.matches') }}">Matches</a>
-  {% if not session.get('is_superuser') %}
+  {% if not session.get('is_superuser') and (not tournament or tournament.play_type == 'single') %}
     <a href="{{ url_for('admin.randomizer') }}">Randomizer</a>
   {% endif %}
   <a href="{{ url_for('admin.awards') }}">Awards</a>
   <a href="{{ url_for('admin.knockout') }}">Knockout</a>
 </nav>
-{% if tournament %}<p class="active-tournament">Managing tournament: <strong>{{ tournament.name }}</strong></p>{% endif %}
+{% if tournament %}<p class="active-tournament">Managing tournament: <strong>{{ tournament.name }}</strong> ({{ config.PLAY_TYPES.get(tournament.play_type, tournament.play_type) }})</p>{% endif %}

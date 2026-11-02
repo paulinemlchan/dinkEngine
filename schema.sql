@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS tournaments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
+    play_type TEXT NOT NULL DEFAULT 'single',
     theme TEXT NOT NULL DEFAULT 'normal',
     banner_filename TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))

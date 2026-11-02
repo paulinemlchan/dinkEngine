@@ -4,7 +4,7 @@
 <ul class="player-list">
   {% for t in tournaments %}
     <li>
-      <span>{{ t.name }}</span>
+      <span>{{ t.name }} <span class="play-type-tag">{{ config.PLAY_TYPES.get(t.play_type, t.play_type) }}</span></span>
       <span class="tournament-actions">
         <a href="{{ url_for('public.scoring', tournament_id=t.id) }}">Scoring</a>
         <a href="{{ url_for('public.rankings', tournament_id=t.id) }}">Rankings</a>

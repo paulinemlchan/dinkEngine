@@ -24,6 +24,9 @@ SUPERUSER_ACCOUNTS = [
 DATABASE = os.environ.get("DATABASE", os.path.join(os.path.dirname(__file__), "dinkengine.sqlite3"))
 
 MAX_PLAYERS = 32
+
+# Tournament types, chosen when a tournament is created. Existing tournaments are "single".
+PLAY_TYPES = {"single": "Random Single Play", "group": "Random Group Play"}
 MAX_COURTS = 20
 MAX_MATCHES_PER_COURT = 5
 MAX_EXCEPTIONS = 5

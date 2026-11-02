@@ -51,11 +51,11 @@ $env:SUPERUSER2_PASSWORD = "strong-password-2"
 ## Pages
 
 - `/login` — admin login
-- `/admin/tournaments` — create tournaments and switch which one is active for the other admin tabs
+- `/admin/tournaments` — create tournaments (choose **Random Single Play** or **Random Group Play**) and switch which one is active for the other admin tabs
 - `/admin/players` — add/remove up to 32 players in the active tournament
 - `/admin/courts` — set the number of courts in the active tournament
 - `/admin/matches` — for each court, assign up to 5 matches (two pairs of players each)
-- `/admin/randomizer` — generate matches across all courts (choose matches per player, add up to 5 "don't pair" exceptions); this replaces any existing matches/scores in the active tournament
+- `/admin/randomizer` — Random Single Play tournaments only: generate matches across all courts (choose matches per player, add up to 5 "don't pair" exceptions); this replaces any existing matches/scores in the active tournament
 - `/admin/knockout` — press **All Matches Complete** to open the knockout round. The top 8 on the rankings are paired 1+8, 2+7, 3+6, 4+5. If players are tied on points at the 8th/9th place cut-off, the admin clicks to choose 8 players from the top 16 first; seeds follow the click order (players above the tie start as the first seeds). **Reset Knockout** hides the tab again
 - `/t/<id>/knockout` — public bracket (semifinals and final, pairs stay the same), shown in the menu only after the admin opens it; admins and superusers click the winning pair
 - `/` — public page listing all tournaments

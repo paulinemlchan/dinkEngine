@@ -7,6 +7,13 @@
 <form method="post" class="inline-form">
   <input type="hidden" name="action" value="create">
   <input type="text" name="name" placeholder="Tournament name" maxlength="120" required>
+  <label>Type
+    <select name="play_type">
+      {% for value, label in config.PLAY_TYPES.items() %}
+        <option value="{{ value }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+  </label>
   <button type="submit">Create &amp; select</button>
 </form>
 
@@ -22,6 +29,7 @@
           <button type="submit">Rename</button>
         </form>
         {% if t.id == active_tournament_id %}<strong>(active)</strong>{% endif %}
+        <span class="play-type-tag">{{ config.PLAY_TYPES.get(t.play_type, t.play_type) }}</span>
         <label>Theme
           <select name="theme" form="theme-form-{{ t.id }}">
             {% for theme in themes %}

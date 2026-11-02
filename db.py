@@ -49,6 +49,8 @@ def _migrate(db):
         db.execute("ALTER TABLE tournaments ADD COLUMN theme TEXT NOT NULL DEFAULT 'normal'")
     if "banner_filename" not in tournament_columns:
         db.execute("ALTER TABLE tournaments ADD COLUMN banner_filename TEXT")
+    if "play_type" not in tournament_columns:
+        db.execute("ALTER TABLE tournaments ADD COLUMN play_type TEXT NOT NULL DEFAULT 'single'")
 
     slam_columns = {row["name"] for row in db.execute("PRAGMA table_info(slam_matches)")}
     if "server_name" not in slam_columns:
