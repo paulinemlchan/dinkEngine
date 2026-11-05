@@ -13,7 +13,76 @@ across the configured courts. Guarantees:
 Raises ValueError if the request is infeasible (not enough players/courts,
 or achieving the exact match count would need more rounds than allowed).
 """
+import itertools
 import random
+
+
+def generate_group_schedule(pools, exception_pairs, max_attempts=500):
+    """Randomly draw one player from each of the 4 pools to form groups of 4.
+
+    `pools` is a dict of pool name -> list of player ids; every pool must have
+    the same number of players (that count becomes the number of groups).
+    Returns a list of groups, each a list of 4 player ids in the same order
+    as `pools`'s keys. Raises ValueError if the request is infeasible.
+    """
+    if len(pools) != 4:
+        raise ValueError("Group play needs exactly 4 pools.")
+
+    sizes = {name: len(ids) for name, ids in pools.items()}
+    if len(set(sizes.values())) != 1:
+        details = ", ".join(f"{name}: {count}" for name, count in sizes.items())
+        raise ValueError(f"Each pool must have the same number of players to form groups ({details}).")
+
+    group_count = next(iter(sizes.values()))
+    if group_count < 1:
+        raise ValueError("Add at least one player to each pool.")
+
+    exceptions = {frozenset(pair) for pair in exception_pairs}
+    pool_lists = list(pools.values())
+
+    for _ in range(max_attempts):
+        shuffled = [random.sample(pool, len(pool)) for pool in pool_lists]
+        groups = list(zip(*shuffled))
+        if all(_group_ok(group, exceptions) for group in groups):
+            return [list(group) for group in groups]
+
+    # Fall back to an exhaustive backtracking search when random sampling
+    # keeps colliding with the exceptions (small pools, many exceptions).
+    groups = _backtrack_groups(pool_lists, exceptions)
+    if groups is None:
+        raise ValueError("Could not build groups that satisfy the exceptions.")
+    return groups
+
+
+def _group_ok(group, exceptions):
+    return all(frozenset(pair) not in exceptions for pair in itertools.combinations(group, 2))
+
+
+def _backtrack_groups(pool_lists, exceptions):
+    if all(not pool for pool in pool_lists):
+        return []
+    return _choose_group(pool_lists, (), 0, exceptions)
+
+
+def _choose_group(pool_lists, chosen, pool_index, exceptions):
+    if pool_index == len(pool_lists):
+        remaining_pools = [
+            [pid for pid in pool if pid != chosen[i]] for i, pool in enumerate(pool_lists)
+        ]
+        rest = _backtrack_groups(remaining_pools, exceptions)
+        if rest is None:
+            return None
+        return [list(chosen)] + rest
+
+    candidates = list(pool_lists[pool_index])
+    random.shuffle(candidates)
+    for candidate in candidates:
+        if any(frozenset((candidate, picked)) in exceptions for picked in chosen):
+            continue
+        result = _choose_group(pool_lists, chosen + (candidate,), pool_index + 1, exceptions)
+        if result is not None:
+            return result
+    return None
 
 
 def generate_match_schedule(player_ids, num_courts, matches_per_player, exception_pairs, max_attempts=500, max_rounds=None):

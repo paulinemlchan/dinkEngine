@@ -43,6 +43,8 @@ def _migrate(db):
     existing_columns = {row["name"] for row in db.execute("PRAGMA table_info(players)")}
     if "is_kid" not in existing_columns:
         db.execute("ALTER TABLE players ADD COLUMN is_kid INTEGER NOT NULL DEFAULT 0")
+    if "pool" not in existing_columns:
+        db.execute("ALTER TABLE players ADD COLUMN pool TEXT")
 
     tournament_columns = {row["name"] for row in db.execute("PRAGMA table_info(tournaments)")}
     if "theme" not in tournament_columns:

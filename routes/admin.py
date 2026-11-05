@@ -6,7 +6,7 @@ from flask import Blueprint, current_app, flash, g, redirect, render_template, r
 from werkzeug.utils import secure_filename
 
 from db import clean_name, get_db
-from randomizer import generate_match_schedule
+from randomizer import generate_group_schedule, generate_match_schedule
 from routes.auth import login_required
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -228,15 +228,18 @@ def players():
         else:
             name = clean_name(request.form.get("name", ""))
             is_kid = 1 if request.form.get("is_kid") else 0
+            pool = request.form.get("pool") or None
             if not name:
                 flash("Player name cannot be empty.", "error")
             elif count >= max_players:
                 flash(f"Maximum of {max_players} players reached.", "error")
+            elif g.tournament["play_type"] == "group" and pool not in current_app.config["POOLS"]:
+                flash("Choose a pool for this player.", "error")
             else:
                 try:
                     db.execute(
-                        "INSERT INTO players (tournament_id, name, is_kid) VALUES (?, ?, ?)",
-                        (tournament_id, name, is_kid),
+                        "INSERT INTO players (tournament_id, name, is_kid, pool) VALUES (?, ?, ?, ?)",
+                        (tournament_id, name, is_kid, pool),
                     )
                     db.commit()
                 except Exception:
@@ -251,6 +254,7 @@ def players():
         players=all_players,
         max_players=max_players,
         tournament=g.tournament,
+        pools=current_app.config["POOLS"],
     )
 
 
@@ -275,6 +279,23 @@ def update_player_kid(player_id):
         (is_kid, player_id, g.tournament["id"]),
     )
     db.commit()
+    return redirect(url_for("admin.players"))
+
+
+@bp.route("/players/<int:player_id>/pool", methods=["POST"])
+@login_required
+@tournament_required
+def update_player_pool(player_id):
+    db = get_db()
+    pool = request.form.get("pool") or None
+    if pool is not None and pool not in current_app.config["POOLS"]:
+        flash("Unknown pool.", "error")
+    else:
+        db.execute(
+            "UPDATE players SET pool = ? WHERE id = ? AND tournament_id = ?",
+            (pool, player_id, g.tournament["id"]),
+        )
+        db.commit()
     return redirect(url_for("admin.players"))
 
 
@@ -465,16 +486,15 @@ def randomizer():
     if session.get("is_superuser"):
         flash("Superusers cannot access the Randomizer.", "error")
         return redirect(url_for("admin.tournaments"))
-    if g.tournament["play_type"] != "single":
-        flash("The Randomizer is only for Random Single Play tournaments.", "error")
-        return redirect(url_for("admin.players"))
 
     db = get_db()
     tournament_id = g.tournament["id"]
+    play_type = g.tournament["play_type"]
     all_players = db.execute(
         "SELECT * FROM players WHERE tournament_id = ? ORDER BY name", (tournament_id,)
     ).fetchall()
     max_exceptions = current_app.config["MAX_EXCEPTIONS"]
+    pools = current_app.config["POOLS"]
 
     if request.method == "POST":
         action = request.form.get("action")
@@ -508,7 +528,7 @@ def randomizer():
             db.commit()
             return redirect(url_for("admin.randomizer"))
 
-        if action == "generate":
+        if action == "generate" and play_type == "single":
             all_courts = db.execute(
                 "SELECT * FROM courts WHERE tournament_id = ? ORDER BY sort_order", (tournament_id,)
             ).fetchall()
@@ -564,6 +584,48 @@ def randomizer():
                 )
             return redirect(url_for("admin.randomizer"))
 
+        if action == "generate_groups" and play_type == "group":
+            pool_players = {key: [p["id"] for p in all_players if p["pool"] == key] for key in pools}
+            unassigned = [p["name"] for p in all_players if not p["pool"]]
+
+            if unassigned:
+                flash(f"Assign a pool to every player first: {', '.join(unassigned)}.", "error")
+            elif any(not ids for ids in pool_players.values()):
+                empty = [label for key, label in pools.items() if not pool_players[key]]
+                flash(f"Each pool needs at least one player. Empty: {', '.join(empty)}.", "error")
+            else:
+                exception_rows = db.execute(
+                    "SELECT player1_id, player2_id FROM exceptions WHERE tournament_id = ?", (tournament_id,)
+                ).fetchall()
+                exception_pairs = [(row["player1_id"], row["player2_id"]) for row in exception_rows]
+
+                try:
+                    groups = generate_group_schedule(pool_players, exception_pairs)
+                except ValueError as exc:
+                    flash(str(exc), "error")
+                    return redirect(url_for("admin.randomizer"))
+
+                pool_keys = list(pools.keys())
+                db.execute("DELETE FROM player_groups WHERE tournament_id = ?", (tournament_id,))
+                for group_number, group in enumerate(groups, start=1):
+                    by_pool = dict(zip(pool_keys, group))
+                    db.execute(
+                        """INSERT INTO player_groups
+                           (tournament_id, group_number, top_seed_player_id, upper_middle_player_id,
+                            lower_middle_player_id, kids_player_id) VALUES (?, ?, ?, ?, ?, ?)""",
+                        (
+                            tournament_id,
+                            group_number,
+                            by_pool["top_seed"],
+                            by_pool["upper_middle"],
+                            by_pool["lower_middle"],
+                            by_pool["kids"],
+                        ),
+                    )
+                db.commit()
+                flash(f"{len(groups)} group(s) generated.", "success")
+            return redirect(url_for("admin.randomizer"))
+
     exceptions = db.execute(
         """SELECT exceptions.id, p1.name AS player1_name, p2.name AS player2_name
            FROM exceptions
@@ -576,6 +638,22 @@ def randomizer():
     courts_count = db.execute(
         "SELECT COUNT(*) AS c FROM courts WHERE tournament_id = ?", (tournament_id,)
     ).fetchone()["c"]
+
+    groups = None
+    if play_type == "group":
+        groups = db.execute(
+            """SELECT pg.group_number, ts.name AS top_seed_name, um.name AS upper_middle_name,
+                      lm.name AS lower_middle_name, k.name AS kids_name
+               FROM player_groups pg
+               LEFT JOIN players ts ON ts.id = pg.top_seed_player_id
+               LEFT JOIN players um ON um.id = pg.upper_middle_player_id
+               LEFT JOIN players lm ON lm.id = pg.lower_middle_player_id
+               LEFT JOIN players k ON k.id = pg.kids_player_id
+               WHERE pg.tournament_id = ?
+               ORDER BY pg.group_number""",
+            (tournament_id,),
+        ).fetchall()
+
     return render_template(
         "admin/randomizer.html",
         players=all_players,
@@ -583,6 +661,8 @@ def randomizer():
         max_exceptions=max_exceptions,
         courts_count=courts_count,
         tournament=g.tournament,
+        pools=pools,
+        groups=groups,
     )
 
 

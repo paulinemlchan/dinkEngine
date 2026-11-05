@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS players (
     tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     is_kid INTEGER NOT NULL DEFAULT 0,
+    -- Random Group Play only: one of 'top_seed', 'upper_middle', 'lower_middle', 'kids'.
+    pool TEXT,
     UNIQUE(tournament_id, name)
 );
 
@@ -40,6 +42,18 @@ CREATE TABLE IF NOT EXISTS exceptions (
     tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
     player1_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
     player2_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE
+);
+
+-- Random Group Play: one player drawn from each of the 4 pools forms a group of 4.
+CREATE TABLE IF NOT EXISTS player_groups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tournament_id INTEGER NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    group_number INTEGER NOT NULL,
+    top_seed_player_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+    upper_middle_player_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+    lower_middle_player_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+    kids_player_id INTEGER REFERENCES players(id) ON DELETE SET NULL,
+    UNIQUE(tournament_id, group_number)
 );
 
 -- 1-Point Slam: a 32-player single-elimination bracket, random seeding, winner takes all.

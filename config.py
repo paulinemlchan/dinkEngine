@@ -27,6 +27,14 @@ MAX_PLAYERS = 32
 
 # Tournament types, chosen when a tournament is created. Existing tournaments are "single".
 PLAY_TYPES = {"single": "Random Single Play", "group": "Random Group Play"}
+
+# Random Group Play pools: one player per pool is drawn to form each group of 4.
+POOLS = {
+    "top_seed": "Top Seed",
+    "upper_middle": "Upper Middle",
+    "lower_middle": "Lower Middle",
+    "kids": "Kids",
+}
 MAX_COURTS = 20
 MAX_MATCHES_PER_COURT = 5
 MAX_EXCEPTIONS = 5

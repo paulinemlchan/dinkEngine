@@ -7,7 +7,14 @@
 <form method="post" class="inline-form">
   <input type="hidden" name="action" value="add">
   <input type="text" name="name" placeholder="Player name" maxlength="80" required>
-  <label><input type="checkbox" name="is_kid"> Kid</label>
+  {% if tournament.play_type == 'group' %}
+    <select name="pool" required>
+      <option value="">-- pool --</option>
+      {% for key, label in pools.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+    </select>
+  {% else %}
+    <label><input type="checkbox" name="is_kid"> Kid</label>
+  {% endif %}
   <button type="submit">Add player</button>
 </form>
 
@@ -18,6 +25,9 @@
     <textarea name="names" rows="6" placeholder="One player name per line (or separate with commas)"></textarea>
     <button type="submit">Add all</button>
   </form>
+  {% if tournament.play_type == 'group' %}
+    <p>Bulk-added players still need a pool — set it below for each one.</p>
+  {% endif %}
 </details>
 {% endif %}
 
@@ -26,9 +36,20 @@
     <li>
       <span>{{ p.name }}</span>
       <span class="player-actions">
-        <form method="post" action="{{ url_for('admin.update_player_kid', player_id=p.id) }}" class="inline-form">
-          <label><input type="checkbox" name="is_kid" onchange="this.form.requestSubmit()" {% if p.is_kid %}checked{% endif %}> Kid</label>
-        </form>
+        {% if tournament.play_type == 'group' %}
+          <form method="post" action="{{ url_for('admin.update_player_pool', player_id=p.id) }}" class="inline-form">
+            <select name="pool" onchange="this.form.requestSubmit()">
+              <option value="">-- pool --</option>
+              {% for key, label in pools.items() %}
+                <option value="{{ key }}" {% if p.pool == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        {% else %}
+          <form method="post" action="{{ url_for('admin.update_player_kid', player_id=p.id) }}" class="inline-form">
+            <label><input type="checkbox" name="is_kid" onchange="this.form.requestSubmit()" {% if p.is_kid %}checked{% endif %}> Kid</label>
+          </form>
+        {% endif %}
         <form method="post" action="{{ url_for('admin.delete_player', player_id=p.id) }}" class="inline-form">
           <button type="submit">Remove</button>
         </form>
